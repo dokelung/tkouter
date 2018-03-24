@@ -378,4 +378,4 @@ class TkOutModel:
         attrs = [a for a in attrs if not(a[0].startswith('__') and a[0].endswith('__'))]
         for a in attrs:
             attr = getattr(self, a)
-            setattr(self, a, property(lambda attr: attr.get())
+            setattr(self, a, property(lambda attr: attr.get()))
