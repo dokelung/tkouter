@@ -75,7 +75,9 @@ def register(name):
 LOADER = FileSystemLoader('./')
 
 
+# ========================================================================
 # tkouter errors
+# ========================================================================
 class Error(Exception):
     """ Base-class for all exceptions raised by this module. """
 
@@ -101,7 +103,9 @@ class CallBackLossFunctionError(TagError):
     """ callback tag losses function attribute. """
 
 
-# tkouter main classes
+# ========================================================================
+# tkouter classes
+# ========================================================================
 class TkOutWidget(Frame):
     """ Design a user-defined widget with html-based layout
 
@@ -111,18 +115,17 @@ class TkOutWidget(Frame):
     Public attributes:
     - widgets: available tkinter(tkouter) widgets.
                (dictionary: widget_tagname/widget_class)
+    - layout: layout html or layout-html file name (string)
     - classes: widget classes which provides several uniform interfaces to
                configure widgets. (class)
-    - layout: layout html or layout-html file name (string)
-    - str_context: used to render the layout if it is a template (dictionary)
+    - context: used to render the layout if it is a template (dictionary)
     - data_context: used to query the data when building a widget. (dictionary)
     """
-
     widgets = WIDGETS
-    classes = None
     loader = LOADER
     layout = None
-    str_context = {}
+    classes = None
+    context = {}
     data_context = None
 
     def __init__(self, parent):
@@ -130,18 +133,19 @@ class TkOutWidget(Frame):
         self.parent = parent
         if self.data_context is None:
             self.data_context = {'self': self}
-        self.build()
+        self._widget_type_counter = {}
+        self._build()
 
-    def build(self):
+    def _build(self):
         """ create layout and define widget attribute by tkouter html """
         self.env = Environment(loader=self.loader)
         if self.layout:
             template = self.env.get_template(self.layout)
-            self.html = template.render(self.str_context)
+            self._html = template.render(self.context)
         creator = TkOutWidgetCreator(self)
-        creator.feed(self.html)
+        creator.feed(self._html)
 
-    def destruct(self):
+    def _destruct(self):
         """ clean the layout(unpack) and delete related widget attributes """
         raise NotImplementedError
 
@@ -194,7 +198,7 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
             self._parents.pop(-1)
             self._packtypes.pop(-1)
 
-    def _parseattrs(self, attrs):
+    def _parseattrs(self, attrs, tag):
         """ parse tag's attributes
 
         given:
@@ -206,12 +210,13 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
             - options: widget options (dictionary)
             - sp_options: special options (dictionary)
         """
+        typ = tag if tag in self._tkoutw.widgets else None
         name, widget, options, sp_options = (None, None, {}, {})
         for attr, value in attrs:
             if attr == 'name':
                 name = value
             elif attr == 'type':
-                widget = self._tkoutw.widgets.get(value, None)
+                typ = value
             elif attr == 'class':
                 if not hasattr(self._tkoutw.classes, value):
                     msg = 'class "{}" does not exist'
@@ -226,8 +231,20 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
                 sp_options[attr] = value
             else:
                 options[attr] = value
+        widget = self._tkoutw.widgets.get(typ, None)
+        if widget:
+            name = self._hand_name(name, typ)
         options = self._handle_options(options)
         return name, widget, options, sp_options
+
+    def _hand_name(self, name, typ):
+        if name is not None:
+            return name
+        if typ in self._tkoutw._widget_type_counter:
+            self._tkoutw._widget_type_counter[typ] += 1
+        else:
+            self._tkoutw._widget_type_counter[typ] = 0
+        return typ + '_' + str(self._tkoutw._widget_type_counter[typ])
 
     def _handle_options(self, options):
         """ handle tag(widet) options
@@ -283,7 +300,7 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
 
     def _handle_callback(self, tag, attrs):
         """ handle callback tag """
-        name, Widget, options, sp_options = self._parseattrs(attrs)
+        name, Widget, options, sp_options = self._parseattrs(attrs, tag)
         if 'function' not in options:
             msg = 'loss "function" attribute in tag <{}>'
             raise CallBackLossFunctionError(msg.format(tag))
@@ -294,7 +311,7 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
     def _handle_head_starttag(self, tag, attrs):
         """ handle head tag in the beginning of it """
         # parse attrs
-        name, Widget, options, sp_options = self._parseattrs(attrs)
+        name, Widget, options, sp_options = self._parseattrs(attrs, tag)
         if tag == 'head':
             if 'window' not in options:
                 msg = 'loss "window" attribute in tag <{}>'
@@ -326,7 +343,7 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
     def _handle_body_starttag(self, tag, attrs):
         """ handle body tag in the beginning of it """
         # parse attrs
-        name, Widget, options, sp_options = self._parseattrs(attrs)
+        name, Widget, options, sp_options = self._parseattrs(attrs, tag)
         if name is None or Widget is None:
             msg = 'loss "name" or "type" attribute in tag <{}>'
             raise TagLossAttributeError(msg.format(tag))
@@ -344,7 +361,7 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
             # propogate
             self._parent = container
             self._packtype = tag
-        elif tag == 'widget':
+        elif tag == 'widget' or tag in self._tkoutw.widgets:
             widget = Widget(self._parent, **options)
             setattr(self._tkoutw, name, widget)
             widget.pack(side=side, **sp_options)

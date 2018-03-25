@@ -1,8 +1,8 @@
 <html>
     <head window="{ self.parent }">
         <callback function="{ self.parent.title }" string="Calculator Demo">
-        <menu type="menu" name="top_menu">
-            <menu type="menu" name="cal_menu" sp-label="calculator" sp-underline="0">
+        <menu name="top_menu">
+            <menu name="cal_menu" sp-label="calculator" sp-underline="0">
                 <callback function="{ self.cal_menu.add_checkbutton }" label="test menu function" onvalue="1" offvalue="0">
                 <callback function="{ self.cal_menu.add_separator }">
                 <callback function="{ self.cal_menu.add_command }" label="Quit" accelerator="">
@@ -11,35 +11,35 @@
     </head>
     <body>
         <top type="frame" name="main">
-            <widget type="entry" name="entrya" textvariable="{ self.contenta }" bg="white">
-            <left type="frame" name="button_frame_1">
-                <widget type="button" name="button_clear"   class="button_cls" text="C" command="{ self.clear }">
-                <widget type="button" name="button_neg"     class="button_cls" text="+/-" command="{ self.neg }">
-                <widget type="button" name="button_percent" class="button_cls" text="%" command="{ self.percent }">
-                <widget type="button" name="button_div"     class="button_cls" text="/" command="{ self.div }">
+            <entry textvariable="{ self.contenta }" bg="white">
+            <left type="frame">
+                <button class="button_cls" text="C" command="{ self.clear }">
+                <button class="button_cls" text="+/-" command="{ self.neg }">
+                <button class="button_cls" text="%" command="{ self.percent }">
+                <button class="button_cls" text="/" command="{ self.div }">
             </left>
-            <left type="frame" name="button_frame_2">
-                <widget type="button" name="button_seven"   class="button_cls" text="7" command="{ self.seven }">
-                <widget type="button" name="button_eight"   class="button_cls" text="8" command="{ self.eight }">
-                <widget type="button" name="button_nine"    class="button_cls" text="9" command="{ self.nine }">
-                <widget type="button" name="button_mul"     class="button_cls" text="X" command="{ self.mul }">
+            <left type="frame">
+                <button class="button_cls" text="7" command="{ self.seven }">
+                <button class="button_cls" text="8" command="{ self.eight }">
+                <button class="button_cls" text="9" command="{ self.nine }">
+                <button class="button_cls" text="X" command="{ self.mul }">
             </left>
-            <left type="frame" name="button_frame_3">
-                <widget type="button" name="button_four"    class="button_cls" text="4" command="{ self.four }">
-                <widget type="button" name="button_five"    class="button_cls" text="5" command="{ self.five }">
-                <widget type="button" name="button_six"     class="button_cls" text="6" command="{ self.six }">
-                <widget type="button" name="button_sub"     class="button_cls" text="-" command="{ self.sub }">
+            <left type="frame">
+                <button class="button_cls" text="4" command="{ self.four }">
+                <button class="button_cls" text="5" command="{ self.five }">
+                <button class="button_cls" text="6" command="{ self.six }">
+                <button class="button_cls" text="-" command="{ self.sub }">
             </left>
-            <left type="frame" name="button_frame_4">
-                <widget type="button" name="button_one"     class="button_cls" text="1" command="{ self.one }">
-                <widget type="button" name="button_two"     class="button_cls" text="2" command="{ self.two }">
-                <widget type="button" name="button_three"   class="button_cls" text="3" command="{ self.three }">
-                <widget type="button" name="button_add"     class="button_cls" text="+" command="{ self.add }">
+            <left type="frame">
+                <button class="button_cls" text="1" command="{ self.one }">
+                <button class="button_cls" text="2" command="{ self.two }">
+                <button class="button_cls" text="3" command="{ self.three }">
+                <button class="button_cls" text="+" command="{ self.add }">
             </left>
-            <left type="frame" name="button_frame_5">
-                <widget type="button" name="button_zero"    class="button_cls" text="0" command="{ self.zero }">
-                <widget type="button" name="button_dot"     class="button_cls" text="." command="{ self.dot }">
-                <widget type="button" name="button_equal"   class="button_cls" text="=" command="{ self.equal }">
+            <left type="frame">
+                <button class="button_cls" text="0" command="{ self.zero }">
+                <button class="button_cls" text="." command="{ self.dot }">
+                <button class="button_cls" text="=" command="{ self.equal }">
             </left>
         </top>
     </body>
