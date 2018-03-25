@@ -40,8 +40,10 @@ __all__ = _util + _classes + _errors
 import html.parser
 from tkinter import *
 from tkinter import ttk
-from jinja2 import Environment, FileSystemLoader
 import inspect
+
+from jinja2 import Environment, FileSystemLoader
+
 
 # util
 WIDGETS = {
@@ -63,7 +65,15 @@ WIDGETS = {
     'menu': Menu,
 }
 
+def register(name):
+    def _register(widget_cls):
+        WIDGETS[name] = widget_cls
+        return widget_cls
+    return _register
+
+
 LOADER = FileSystemLoader('./')
+
 
 # tkouter errors
 class Error(Exception):
