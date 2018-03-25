@@ -113,18 +113,15 @@ class TkOutWidget(Frame):
                (dictionary: widget_tagname/widget_class)
     - classes: widget classes which provides several uniform interfaces to
                configure widgets. (class)
-    - html: layout html (string)
-    - htmlfile: file of layout html, if htmlfile is given then attribute html
-                will be ignored by tkouter (html file)
-    - str_context: used to render the htmlfile if it is a template (dictionary)
+    - layout: layout html or layout-html file name (string)
+    - str_context: used to render the layout if it is a template (dictionary)
     - data_context: used to query the data when building a widget. (dictionary)
     """
 
     widgets = WIDGETS
     classes = None
     loader = LOADER
-    html = ""
-    htmlfile = None
+    layout = None
     str_context = {}
     data_context = None
 
@@ -138,8 +135,8 @@ class TkOutWidget(Frame):
     def build(self):
         """ create layout and define widget attribute by tkouter html """
         self.env = Environment(loader=self.loader)
-        if self.htmlfile:
-            template = self.env.get_template(self.htmlfile)
+        if self.layout:
+            template = self.env.get_template(self.layout)
             self.html = template.render(self.str_context)
         creator = TkOutWidgetCreator(self)
         creator.feed(self.html)

@@ -8,7 +8,7 @@ from cal_cls import MyClass
 class MyWindow(TkOutWidget):
 
     classes = MyClass
-    htmlfile = 'cal.html'
+    layout = 'cal.html'
 
     def __init__(self, tkroot):
         self.contenta = StringVar()
