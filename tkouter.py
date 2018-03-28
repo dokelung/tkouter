@@ -165,7 +165,7 @@ class TkOutWidget(Frame):
 
     def _destruct(self):
         """ clean the layout(unpack) and delete related widget attributes """
-        raise NotImplementedError
+        raise NotImplementedError("TkOutWidget._destruct")
 
 
 class TkOutTag:
@@ -174,6 +174,7 @@ class TkOutTag:
     _widget_type_counter = {}
 
     def __init__(self, creater, tag_name, attrs, se_type):
+        # common attributes
         self._tkoutw = creater._tkoutw
         self._tag_name = tag_name
         self._parent = self if self.is_html else creater._current_tag
@@ -181,6 +182,11 @@ class TkOutTag:
         self._attrs_dic = dict(attrs)
         self._se_type = se_type
         self._widget = None
+
+        # special attributes
+        self._menu_entry_count = 0
+
+        # check
         self._check_valid()
         self._check_se()
         self._check_scope()
@@ -320,6 +326,8 @@ class TkOutTag:
 
     @property
     def can_be_startend(self):
+        if self.is_menu:
+            return False
         return self._tag_name in self._tkoutw.widgets or self._tag_name in ['separator', 'command', 'radiobutton', 'checkbutton']
 
     @property
@@ -462,10 +470,24 @@ class TkOutTag:
             self.parent_widget.add_cascade(menu=self.widget, **self.options)
         elif self.is_under_menu:
             self.parent_widget.add(itemType=self.widget_type, **self.options)
+            self._parent._menu_entry_count += 1
         elif self.is_top_menu:
             self.parent_widget['menu'] = self.widget
         elif self.is_under_body:
             self.widget.pack(side=self.pack_side, **self.sp_options)
+
+    def re_display(self, **update_options):
+        options = self.options
+        options.update(update_options)
+        if self.is_sub_menu:
+            raise NotImplementedError("TkOutTag.re_display::is_sub_menu")
+        elif self.is_under_menu:
+            self.parent_widget.delete(self._parent._menu_entry_count-1)
+            self.parent_widget.add(itemType=self.widget_type, **options)
+        elif self.is_top_menu:
+            raise NotImplementedError("TkOutTag.re_display::is_top_menu")
+        elif self.is_under_body:
+            raise NotImplementedError("TkOutTag.re_display::is_under_body")
 
 
 class TkOutWidgetCreator(html.parser.HTMLParser):
@@ -520,6 +542,8 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
         self._show_current_tag('data', data)
         if self._current_tag._tag_name == 'title':
             self._tkoutw.parent.title(data)
+        elif self._current_tag.is_under_menu and self._current_tag.can_be_startend:
+            self._current_tag.re_display(label=data)
         elif self._current_tag.is_under_body and self._current_tag.can_be_startend:
             self._current_tag.widget.config(text=data)
 
