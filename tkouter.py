@@ -16,6 +16,7 @@ Available Classes:
 _gvars = [
     'BODY_WIDGETS',
     'LOADER',
+    'DEBUG',
 ]
 
 _apis = [
@@ -30,14 +31,12 @@ _classes = [
 _errors = [
     'Error',
     'TagError',
-    'TagLossAttributeError',
     'TagUnRecognizedError',
     'DataNotExistError',
     'ClassNotExistError',
     'TagStartEndNotMatch',
     'TagInWrongScope',
     'TagStartEndTypeError',
-    'TagDisplayError',
 ]
 
 __all__ = _gvars + _apis + _classes + _errors
@@ -83,6 +82,8 @@ BODY_WIDGETS = {
 
 LOADER = FileSystemLoader('./')
 
+DEBUG = True
+
 # ========================================================================
 # tkouter APIs
 # ========================================================================
@@ -105,9 +106,6 @@ class Error(Exception):
 class TagError(Error):
     """ There is a problem in the tag of layout html. """
 
-class TagLossAttributeError(TagError):
-    """ Standard tkouter tag losses 'name'/'type' attribute. """
-
 class TagUnRecognizedError(TagError):
     """ There is unknown tag in tkouter layout html. """
 
@@ -125,9 +123,6 @@ class TagInWrongScope(TagError):
 
 class TagStartEndTypeError(TagError):
     """ tag with wrong start end type """
-
-class TagDisplayError(TagError):
-    """ can not display tag """
 
 
 # ========================================================================
@@ -162,10 +157,9 @@ class TkOutWidget(Frame):
         if self.body_widgets is None:
             self.body_widgets = BODY_WIDGETS
             self.body_widgets.update(_COMBO_WIDGETS)
-        self._widget_type_counter = {}
-        self._widgets = {}
-        self._widgets.update(self.body_widgets)
-        self._widgets.update(_HEAD_WIDGETS)
+        self.widgets = {}
+        self.widgets.update(self.body_widgets)
+        self.widgets.update(_HEAD_WIDGETS)
         self._build()
 
     def _build(self):
@@ -198,6 +192,12 @@ class TkOutTag:
         self._check_valid()
         self._check_se()
         self._check_scope()
+
+    def __str__(self):
+        return '<{}>'.format(self._tag_name)
+
+    def __repr__(self):
+        return 'TkOutTag({}, {}, {}, {})'.format('<TkOutWidgetCreator>', self._tag_name, self._attrs, self._se_type)
 
     def _check_valid(self):
         if not (self.is_html or self.is_scope or self.can_under_head or self.can_under_body):
@@ -324,11 +324,11 @@ class TkOutTag:
 
     @property
     def can_under_body(self):
-        return self._tag_name in self._tkoutw._widgets or self.is_side
+        return self._tag_name in self._tkoutw.widgets or self.is_side
 
     @property
     def can_be_startend(self):
-        return self._tag_name in self._tkoutw._widgets or self._tag_name in ['command', 'radiobutton', 'checkbutton']
+        return self._tag_name in self._tkoutw.widgets or self._tag_name in ['command', 'radiobutton', 'checkbutton']
 
     @property
     def has_no_widget_type(self):
@@ -392,7 +392,7 @@ class TkOutTag:
 
     @property
     def widget_cls(self):
-        return self._tkoutw._widgets.get(self.widget_type, None)
+        return self._tkoutw.widgets.get(self.widget_type, None)
 
     @property
     def class_options(self):
@@ -486,7 +486,6 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
     def __init__(self, tkout_widget):
         super().__init__()
         self._tkoutw = tkout_widget
-        self._scope = ''
         self._tag_stack = []
 
     @property
@@ -503,8 +502,30 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
         else:
             self._tag_stack.append(tag)
 
+    def _show_current_tag(self, se_type, tag_or_data, attrs=None):
+        """ debug function """
+        if not DEBUG:
+            return
+        indent = len(self._tag_stack) * 4 * ' ' if se_type in ['start', 'startend', 'data'] else (len(self._tag_stack)-1) * 4 * ' '
+        if se_type in ['start', 'end', 'startend']:
+            tag = tag_or_data
+            bslash = '/' if se_type=='end' else ''
+            eslash = ' /' if se_type=='startend' else ''
+            if attrs:
+                attrs = ' ' + ', '.join(['{}="{}"'.format(attr, value) for attr, value in attrs])
+            else:
+                attrs = ''
+            temp = '<{bslash}{tag}{attrs}{eslash}>'
+            print(indent + temp.format(bslash=bslash, tag=tag, attrs=attrs, eslash=eslash))
+        else:
+            data = tag_or_data
+            data = data.strip()
+            if data:
+                print(indent + data)
+
     def handle_data(self, data):
         """ handle data """
+        self._show_current_tag('data', data)
         if self._current_tag._tag_name == 'title':
             self._tkoutw.parent.title(data)
         elif self._current_tag.is_under_body and self._current_tag.can_be_startend:
@@ -512,334 +533,25 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
 
     def handle_startendtag(self, tag, attrs):
         """ handle start end tag """
+        self._show_current_tag('startend', tag, attrs)
         t = TkOutTag(self, tag, attrs, 'startend')
         t.display()
 
     def handle_starttag(self, tag, attrs):
         """ handle tag in the beginning of it """
+        self._show_current_tag('start', tag, attrs)
         t = TkOutTag(self, tag, attrs, 'start')
         t.display()
         self._current_tag = t
 
     def handle_endtag(self, tag):
         """ handle tag in the end of it """
+        self._show_current_tag('end', tag)
         if tag != self._current_tag._tag_name:
-            msg = 'start tag <{}> does not match end tag <{}>'
+            msg = 'start tag <{}> does not match end tag </{}>'
             raise TagStartEndNotMatch(msg.format(self._current_tag._tag_name, tag))
         else:
             self._current_tag = None
-
-
-class TkOutWidgetCreator2(html.parser.HTMLParser):
-    """ Create tkouter widget layout by html
-
-    It is the core engine of html-based layout.
-    User should not use it directly.
-    """
-
-    def __init__(self, tkout_widget):
-        super().__init__()
-        self._tkoutw = tkout_widget
-        self._scope = ''
-        self._tag_stack = []
-        # define tags
-        self.skip_tags = ['html']
-        self.area_tags = ['head', 'body']
-        self.side_tags = ['top', 'bottom', 'left', 'right']
-        self.menu_tags = ['menu', 'separator', 'command', 'radiobutton', 'checkbutton']
-        self.comb_tags = list(_COMBO_WIDGETS.keys())
-        self.head_tags = list(_HEAD_WIDGETS.keys()) + list(_COMBO_WIDGETS.keys())
-        self.body_tags = list(self._tkoutw.body_widgets.keys()) + self.side_tags + ['widget']
-
-    @property
-    def _current_tag(self):
-        return self._tag_stack[-1]
-
-    @_current_tag.setter
-    def _current_tag(self, next_tag):
-        self._tag_stack.append(next_tag)
-
-    @property
-    def _parent(self):
-        return self._parents[-1]
-
-    @_parent.setter
-    def _parent(self, next_parent):
-        self._parents.append(next_parent)
-
-    @property
-    def _packtype(self):
-        return self._packtypes[-1]
-
-    @_packtype.setter
-    def _packtype(self, packtype):
-        self._packtypes.append(packtype)
-
-    def _is_widget_tag(self, tag):
-        return tag in self._tkoutw._widgets
-
-    def _init_head(self):
-        """ settings for handling elements between <head> tag """
-        self._scope = 'head'
-        self._parents = [self._tkoutw.parent]
-
-    def _init_body(self):
-        """ settings for handling elements between <body> tag """
-        self._scope = 'body'
-        self._parents = [self._tkoutw]
-        self._packtypes = ['top']
-
-    def _backtrack(self):
-        """ backtrack to the upper level """
-        if self._scope == 'head':
-            self._parents.pop(-1)
-        elif self._scope == 'body':
-            self._parents.pop(-1)
-            self._packtypes.pop(-1)
-
-    def _parseattrs(self, attrs, tag, check_widget=True):
-        """ parse tag's attributes
-
-        given:
-            tag: tag name
-            attrs: tuple list, each tuple is a 2-elements pair (attr, value)
-        return:
-            tuple: (name, typ, widget, options, sp_options)
-            - name: variable name (string)
-            - typ: widget type
-            - widget: widget class name (class, type)
-            - options: widget options (dictionary)
-            - sp_options: special options (dictionary)
-        """
-        # use tag as type if tag is an available widget name
-        typ = tag if tag in self._tkoutw._widgets else None
-        # init return values
-        name, widget, options, sp_options = (None, None, {}, {})
-        # parse attributes
-        for attr, value in attrs:
-            if attr == 'name':
-                name = value,
-                m
-            elif attr == 'type':
-                typ = value
-            elif attr == 'class':
-                if not hasattr(self._tkoutw.classes, value):
-                    msg = 'class "{}" does not exist'
-                    raise ClassNotExist(msg.format(value))
-                cls = getattr(self._tkoutw.classes, value) 
-                for cls_attr, cls_value in cls.__dict__.items():
-                    if cls_attr.startswith('_'):
-                        continue
-                    options[cls_attr] = str(cls_value)
-            elif attr.startswith('sp-'):
-                attr = attr[3:]
-                sp_options[attr] = value
-            else:
-                options[attr] = value
-        # post process
-        widget = self._tkoutw._widgets.get(typ, None)
-        if widget:
-            name = self._handle_name(name, typ)
-        options = self._handle_options(options)
-        # check widget
-        if check_widget and widget is None:
-            msg = 'loss "type" attribute in tag <{}>'
-            raise TagLossAttributeError(msg.format(tag))
-        return name, typ, widget, options, sp_options
-
-    def _handle_name(self, name, typ):
-        """ handle widget name
-
-        User can omit "name" attribute for their widgets, this function use
-        given "typ" and current widgets number to produce an unique name
-        for widget using.
-
-        given:
-            name: original name attribute fetched from tag || None
-            typ: type attribute fetched from tag (should not be None)
-        return:
-            a string which 
-        """
-        assert(typ is not None)
-        if name is not None:
-            return name
-        if typ in self._tkoutw._widget_type_counter:
-            self._tkoutw._widget_type_counter[typ] += 1
-        else:
-            self._tkoutw._widget_type_counter[typ] = 0
-        return typ + '_' + str(self._tkoutw._widget_type_counter[typ])
-
-    def _handle_options(self, options):
-        """ handle tag(widet) options
-
-        For the simple type of options, user just give its value(string) in the
-        layout html tags. Note that, string here is okay for interger, float,
-        ...etc because tkinter will transform all types to string in tcl level
-        execution.
-
-        Some options are special or complicated, we should pre-set their values
-        and assign to some variables then specify the variable in symbol "{" and
-        "}" as option value.
-        """
-        modified_options = {}
-        for name, value in options.items():
-            if value.startswith('{') and value.endswith('}'):
-                value = value[1:-1].strip()
-                attrs = value.split('.')
-                dkey, *attrs = attrs
-                try:
-                    data = self._tkoutw.data_context[dkey]
-                    for attr in attrs:
-                        if hasattr(data, attr):
-                            data = getattr(data, attr)
-                        elif attr in data:
-                            data = data[attr]
-                    modified_options[name] = data
-                except:
-                    msg = 'data "{}" does not exist'
-                    raise DataNotExistError(msg.format(value))
-            else:
-                modified_options[name] = value
-        return modified_options
-
-    def _get_packside(self, sp_options):
-        if 'side' in sp_options:
-            side = sp_options['side']
-            del sp_options['side']
-        else:
-            side = self._packtype
-        return side
-
-    def _create_widget(self, name, widget_cls, options):
-        """ create widget with widget_cls and options, also assign to name """
-        if not isinstance(self._parent, Menu): # general widget
-            widget = widget_cls(self._parent, **options)
-            setattr(self._tkoutw, name, widget)
-        elif widget_cls == Menu: # top menu and sub menu
-            widget = widget_cls(self._parent)
-            setattr(self._tkoutw, name, widget)
-        else: # separator, command, checkbutton, radiobutton under menu
-            widget = None
-        return widget
-
-    def _show_widget(self, typ, widget, options, sp_options):
-        """ to display widget
-        - top menu: set to windows's menu attribute
-        - sub menu: add_cascade to parent menu
-        - menu widget: add to parent menu
-        - general widget: pack
-        """
-        if isinstance(self._parent, Menu):
-            if isinstance(widget, Menu): # sub menu
-                self._parent.add_cascade(menu=widget, **options)
-            else: # separator, command, checkbutton, radiobutton under menu
-                self._parent.add(itemType=typ, **options)
-        elif isinstance(widget, Menu): # top level menu
-            self._parent['menu'] = widget
-        else: # general widget
-            side = self._get_packside(sp_options)
-            widget.pack(side=side, **sp_options)
-
-    def _handle_widget(self, tag, attrs):
-        """ create widget and show it """
-        name, typ, Widget, options, sp_options = self._parseattrs(attrs, tag)
-        widget = self._create_widget(name, Widget, options)
-        self._show_widget(typ, widget, options, sp_options)
-        return widget
-
-    def _check_scope(self, tag):
-        if tag in self.comb_tags:
-            return
-        if tag in self.head_tags and self._scope != 'head':
-            msg = 'tag <{}> should be under scope tag <head>'
-            raise TagInWrongScope(msg.format(tag))
-        if tag in self.body_tags and self._scope != 'body':
-            msg = 'tag <{}> should be under scope tag <body>'
-            raise TagInWrongScope(msg.format(tag))
-
-    def handle_data(self, data):
-        """ handle data """
-        if self._current_tag == 'title':
-            self._tkoutw.parent.title(data)
-        elif self._current_tag in self.body_tags and self._is_widget_tag(self._current_tag):
-            print(self._current_tag, self._parent)
-            self._parent.config(text=data)
-
-    def handle_startendtag(self, tag, attrs):
-        """ handle start end tag """
-        self._check_scope(tag)
-
-        if tag in self.menu_tags and tag != 'menu':
-            widget = self._handle_widget(tag, attrs)
-        elif tag in self.body_tags:
-            widget = self._handle_widget(tag, attrs)
-        elif self._is_widget_tag(tag):
-            pass
-        else:
-            msg = 'unrecognized tag <{}>'
-            raise TagUnRecognizedError(msg.format(tag))
-
-    def handle_starttag(self, tag, attrs):
-        """ handle tag in the beginning of it """
-        self._current_tag = tag
-        self._check_scope(tag)
-
-        if tag in self.skip_tags:
-            pass
-        elif tag in self.area_tags:
-            if tag == 'head':
-                self._init_head()
-            elif tag == 'body':
-                self._init_body()
-        elif tag in self.side_tags:
-            container = self._handle_widget(tag, attrs)
-            self._parent = container
-            self._packtype = tag
-        elif tag in self.menu_tags:
-            if tag == 'menu':
-                menu = self._handle_widget(tag, attrs)
-                self._parent = menu
-            else:
-                widget = self._handle_widget(tag, attrs)
-                self._parent = widget
-        elif tag in self.body_tags:
-            widget = self._handle_widget(tag, attrs)
-            self._parent = widget
-            self._packtype = 'top'
-        elif self._is_widget_tag(tag):
-            pass
-        else:
-            msg = 'unrecognized tag <{}>'
-            raise TagUnRecognizedError(msg.format(tag))
-
-    def handle_endtag(self, tag):
-        """ handle tag in the end of it """
-        if tag != self._current_tag:
-            msg = 'start tag <{}> does not match end tag <{}>'
-            raise TagStartEndNotMatch(msg.format(self._current_tag, tag))
-        else:
-            self._tag_stack.pop(-1)
-        self._check_scope(tag)
-
-        if tag in self.skip_tags:
-            pass
-        elif tag in self.area_tags:
-            self._backtrack()
-            assert(not self._parents)
-        elif tag in self.side_tags:
-            self._backtrack()
-        elif tag in self.menu_tags:
-            if tag == 'menu':
-                self._backtrack()
-            else:
-                self._backtrack()
-        elif tag in self.body_tags:
-            self._backtrack()
-        elif self._is_widget_tag(tag):
-            pass
-        else:
-            msg = 'unrecognized tag <{}>'
-            raise TagUnRecognizedError(msg.format(tag))
 
 
 class TkOutModel:
