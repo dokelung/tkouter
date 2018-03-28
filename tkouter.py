@@ -14,7 +14,7 @@ Available Classes:
 """
 
 _gvars = [
-    'BODY_WIDGETS',
+    'WIDGETS',
     'LOADER',
     'DEBUG',
 ]
@@ -53,19 +53,7 @@ from jinja2 import Environment, FileSystemLoader
 # ========================================================================
 # global variables
 # ========================================================================
-_HEAD_WIDGETS = {
-    'menu': Menu,
-    'command': 'command',
-    'separator': 'separator',
-    'title': 'title',
-}
-
-_COMBO_WIDGETS = {
-    'radiobutton': ttk.Radiobutton,
-    'checkbutton': ttk.Checkbutton,
-}
-
-BODY_WIDGETS = {
+WIDGETS = {
     # widget tag type
     'label': Label,
     'entry': Entry,
@@ -75,14 +63,19 @@ BODY_WIDGETS = {
     'listbox': Listbox,
     'treeview': ttk.Treeview,
     'notebook': ttk.Notebook,
+    'radiobutton': ttk.Radiobutton,
+    'checkbutton': ttk.Checkbutton,
     # frame tag type
     'frame': Frame,
     'labelframe': ttk.LabelFrame,
+    # head tag type
+    'menu': Menu,
 }
 
 LOADER = FileSystemLoader('./')
 
 DEBUG = True
+
 
 # ========================================================================
 # tkouter APIs
@@ -93,9 +86,10 @@ def register(name):
         register('my_widget_name')(MyWidgetClass) 
     """
     def _register(widget_cls):
-        BODY_WIDGETS[name] = widget_cls
+        WIDGETS[name] = widget_cls
         return widget_cls
     return _register
+
 
 # ========================================================================
 # tkouter errors
@@ -135,14 +129,14 @@ class TkOutWidget(Frame):
     Subclass may override some class attributes to make its own widget or layout.
 
     Public attributes:
-    - body_widgets: available body widgets (dictionary)
+    - widgets: available widgets (dictionary)
     - layout: layout html or layout-html file name (string)
     - classes: widget classes which provides several uniform interfaces to
                configure widgets. (class)
     - context: used to render the layout if it is a template (dictionary)
     - data_context: used to query the data when building a widget. (dictionary)
     """
-    body_widgets = None
+    widgets = WIDGETS
     loader = LOADER
     layout = None
     classes = None
@@ -154,12 +148,10 @@ class TkOutWidget(Frame):
         self.parent = parent
         if self.data_context is None:
             self.data_context = {'self': self}
-        if self.body_widgets is None:
-            self.body_widgets = BODY_WIDGETS
-            self.body_widgets.update(_COMBO_WIDGETS)
+        user_widgets = self.widgets
         self.widgets = {}
-        self.widgets.update(self.body_widgets)
-        self.widgets.update(_HEAD_WIDGETS)
+        self.widgets.update(WIDGETS)
+        self.widgets.update(user_widgets)
         self._build()
 
     def _build(self):
@@ -328,7 +320,7 @@ class TkOutTag:
 
     @property
     def can_be_startend(self):
-        return self._tag_name in self._tkoutw.widgets or self._tag_name in ['command', 'radiobutton', 'checkbutton']
+        return self._tag_name in self._tkoutw.widgets or self._tag_name in ['separator', 'command', 'radiobutton', 'checkbutton']
 
     @property
     def has_no_widget_type(self):

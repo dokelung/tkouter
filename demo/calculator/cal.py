@@ -1,7 +1,7 @@
 import operator
 
 from tkinter import *
-from tkouter import *
+from tkouter import TkOutWidget, register
 from cal_cls import MyClass
 
 
