@@ -189,6 +189,9 @@ class MyWindow(TkOutWidget):
             return
         self.contenta.set(number+'9')
 
+    def bye(self):
+        print('bye')
+
 
 if __name__ == '__main__':
 
