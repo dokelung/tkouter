@@ -183,6 +183,11 @@ class TkOutTag:
         self._se_type = se_type
         self._widget = None
 
+        self._options = {}
+        self._widget_method_options = {}
+        self._parse_options()
+        self._init_pack_options()
+
         # special attributes
         self._menu_entry_count = 0
 
@@ -252,6 +257,48 @@ class TkOutTag:
                 modified_options[name] = value
         return modified_options
 
+    def _parse_options(self):
+        clss = self._attrs_dic.get('class', None)
+        if clss:
+            cls_lst = clss.split()
+            for cname in cls_lst:
+                if not hasattr(self._tkoutw.classes, cname):
+                    msg = 'class "{}" does not exists'
+                    raise ClassNotExist(msg.format(cname))
+                c = getattr(self._tkoutw.classes, cname)
+                for attr, value in c.__dict__.items():
+                    if attr.startswith('_'):
+                        continue
+                    elif '__' in attr:
+                        method, _, attr  = attr.partition('__')
+                        options = self._widget_method_options.setdefault(method, {})
+                        options[attr] = value
+                    else:
+                        self._options[attr] = str(value)
+        for attr, value in self._attrs:
+            if attr in ['name', 'type', 'class']:
+                continue
+            elif '-' in attr:
+                method, _, attr  = attr.partition('-')
+                options = self._widget_method_options.setdefault(method, {})
+                options[attr] = value
+            else:
+                self._options[attr] = value
+        # handle options
+        self._options = self._handle_options(self._options)
+        for method, options in self._widget_method_options.items():
+            self._widget_method_options[method] = self._handle_options(options)
+
+    def _init_pack_options(self):
+        if self.is_under_body:
+            pack_options = self._widget_method_options.setdefault('pack', {})
+            if 'side' not in pack_options:
+                if self._parent.is_body or self._parent.is_notebook:
+                    pack_options['side'] = 'top'
+                else:
+                    pack_options['side'] = self._parent._tag_name
+                    assert(pack_options['side'] in ['top', 'bottom', 'left', 'right'])
+
     @property
     def is_start(self):
         return self._se_type == 'start'
@@ -286,7 +333,7 @@ class TkOutTag:
 
     @property
     def is_menu(self):
-        return self._tag_name == 'menu'
+        return self.has_widget_cls and issubclass(self.widget_cls, Menu)
 
     @property
     def is_top_menu(self):
@@ -295,6 +342,10 @@ class TkOutTag:
     @property
     def is_sub_menu(self):
         return self.is_menu and self._parent.is_menu
+
+    @property
+    def is_notebook(self):
+        return self.has_widget_cls and issubclass(self.widget_cls, ttk.Notebook)
 
     @property
     def is_under_head(self):
@@ -326,7 +377,7 @@ class TkOutTag:
 
     @property
     def can_be_startend(self):
-        if self.is_menu:
+        if self.is_menu or self.is_notebook:
             return False
         return self._tag_name in self._tkoutw.widgets or self._tag_name in ['separator', 'command', 'radiobutton', 'checkbutton']
 
@@ -347,20 +398,8 @@ class TkOutTag:
         return self.widget_cls is not None
 
     @property
-    def has_class_options(self):
-        return bool(self.class_options)
-
-    @property
     def has_options(self):
-        return bool(self.options)
-
-    @property
-    def has_sp_options(self):
-        return bool(self.sp_options)
-
-    @property
-    def has_pack_side(self):
-        return self.pack_side is not None
+        return bool(self._options)
 
     @property
     def has_widget(self):
@@ -395,55 +434,6 @@ class TkOutTag:
         return self._tkoutw.widgets.get(self.widget_type, None)
 
     @property
-    def class_options(self):
-        options = {}
-        clss = self._attrs_dic.get('class', None)
-        if clss:
-            cls_lst = clss.split()
-            for cname in cls_lst:
-                if not hasattr(self._tkoutw.classes, cname):
-                    msg = 'class "{}" does not exists'
-                    raise ClassNotExist(msg.format(cname))
-                c = getattr(self._tkoutw.classes, cname)
-                for cls_attr, cls_value in c.__dict__.items():
-                    if cls_attr.startswith('_'):
-                        continue
-                    options[cls_attr] = str(cls_value)
-        return options
-
-    @property
-    def options(self):
-        options = self.class_options
-        for attr, value in self._attrs:
-            if attr in ['name', 'type', 'class'] or attr.startswith('sp-'):
-                continue
-            else:
-                options[attr] = value
-        return self._handle_options(options)
-
-    @property
-    def sp_options(self):
-        options = {}
-        for attr, value in self._attrs:
-            if attr.startswith('sp-'):
-                attr = attr[3:]
-                options[attr] = value
-        return options
-
-    @property
-    def pack_side(self):
-        side = None
-        if self.is_under_body:
-            side = self.sp_options.get('side', None)
-            if side is None:
-                if self._parent.is_body:
-                    side = 'top'
-                else:
-                    side = self._parent._tag_name
-                    assert(side in ['top', 'bottom', 'left', 'right'])
-        return side
-
-    @property
     def parent_widget(self):
         if self._parent.has_widget:
             return self._parent.widget
@@ -455,10 +445,14 @@ class TkOutTag:
         return None
 
     @property
+    def pack_options(self):
+        return self._widget_method_options['pack']
+
+    @property
     def widget(self):
         if self._widget is None:
             if self.is_under_body:
-                self._widget = self.widget_cls(self.parent_widget, **self.options)
+                self._widget = self.widget_cls(self.parent_widget, **self._options)
                 setattr(self._tkoutw, self.widget_name, self._widget)
             elif self.is_menu:
                 self._widget = self.widget_cls(self.parent_widget)
@@ -467,17 +461,17 @@ class TkOutTag:
 
     def display(self):
         if self.is_sub_menu:
-            self.parent_widget.add_cascade(menu=self.widget, **self.options)
+            self.parent_widget.add_cascade(menu=self.widget, **self._options)
         elif self.is_under_menu:
-            self.parent_widget.add(itemType=self.widget_type, **self.options)
+            self.parent_widget.add(itemType=self.widget_type, **self._options)
             self._parent._menu_entry_count += 1
         elif self.is_top_menu:
             self.parent_widget['menu'] = self.widget
         elif self.is_under_body:
-            self.widget.pack(side=self.pack_side, **self.sp_options)
+            self.widget.pack(**self.pack_options)
 
     def re_display(self, **update_options):
-        options = self.options
+        options = self._options
         options.update(update_options)
         if self.is_sub_menu:
             raise NotImplementedError("TkOutTag.re_display::is_sub_menu")
@@ -488,6 +482,10 @@ class TkOutTag:
             raise NotImplementedError("TkOutTag.re_display::is_top_menu")
         elif self.is_under_body:
             raise NotImplementedError("TkOutTag.re_display::is_under_body")
+
+    def post_process(self):
+        if self._parent.is_notebook:
+            self.parent_widget.add(child=self.widget, text=self.widget_name)
 
 
 class TkOutWidgetCreator(html.parser.HTMLParser):
@@ -563,6 +561,7 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
     def handle_endtag(self, tag):
         """ handle tag in the end of it """
         self._show_current_tag('end', tag)
+        self._current_tag.post_process()
         if tag != self._current_tag._tag_name:
             msg = 'start tag <{}> does not match end tag </{}>'
             raise TagStartEndNotMatch(msg.format(self._current_tag._tag_name, tag))

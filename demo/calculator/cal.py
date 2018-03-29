@@ -197,5 +197,5 @@ if __name__ == '__main__':
 
     root = Tk()
     window = MyWindow(root)
-    window.pack()
+    window.pack(fill='both', expand='1')
     root.mainloop()
