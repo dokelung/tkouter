@@ -1,15 +1,20 @@
 import operator
 
-from tkinter import *
-from tkouter import TkOutWidget, StringField, MyStringField
-from cal_cls import MyClass
+from tkinter import Tk
+from tkouter import *
+from tkouter import settings
+
+from cal_cls import LayoutClass
 
 
-class MyWindow(TkOutWidget):
+settings.DEBUG = True
 
-    contenta = MyStringField(default='0', length=10)
 
-    classes = MyClass
+class Calculator(TkOutWidget):
+
+    content = StringField(default='0', max_length=20)
+
+    classes = LayoutClass
     layout = 'cal.html'
 
     def __init__(self, tkroot):
@@ -21,13 +26,13 @@ class MyWindow(TkOutWidget):
     def clear(self):
         self.operator = None
         self.cache = None
-        self.contenta = 0
+        self.content = 0
         self.should_clear = True
 
     def add(self):
         if self.operator:
             self._equal()
-        number = self.contenta
+        number = self.content
         self.cache = number
         self.operator = operator.add
         self.should_clear = True
@@ -35,7 +40,7 @@ class MyWindow(TkOutWidget):
     def sub(self):
         if self.operator:
             self._equal()
-        number = self.contenta
+        number = self.content
         self.cache = number
         self.operator = operator.sub
         self.should_clear = True
@@ -43,7 +48,7 @@ class MyWindow(TkOutWidget):
     def mul(self):
         if self.operator:
             self._equal()
-        number = self.contenta
+        number = self.content
         self.cache = number
         self.operator = operator.mul
         self.should_clear = True
@@ -51,7 +56,7 @@ class MyWindow(TkOutWidget):
     def div(self):
         if self.operator:
             self._equal()
-        number = self.contenta
+        number = self.content
         self.cache = number
         self.operator = operator.truediv
         self.should_clear = True
@@ -64,11 +69,11 @@ class MyWindow(TkOutWidget):
         return nbstr
 
     def _equal(self):
-        number = self.contenta
+        number = self.content
         if self.operator:
             number = str(self.operator(float(self.cache), float(number)))
             number = self._trim_redundant_digit(number)
-        self.contenta = number
+        self.content = number
 
     def equal(self):
         self._equal()
@@ -76,85 +81,85 @@ class MyWindow(TkOutWidget):
         self.should_clear = True
 
     def percent(self):
-        number = self.contenta
+        number = self.content
         number = str(float(number)/100)
-        self.contenta = number
+        self.content = number
         self.should_clear = True
 
     def neg(self):
-        number = self.contenta
+        number = self.content
         if number[0] == '-':
             number = number[1:]
         else:
             number = '-' + number
-        self.contenta = number
+        self.content = number
 
     # number
     def dot(self):
         if self.should_clear:
-            self.contenta = ''
+            self.content = ''
             self.should_clear = False
-        self.contenta += '.'
+        self.content += '.'
 
     def zero(self):
         if self.should_clear:
-            self.contenta = ''
+            self.content = ''
             self.should_clear = False
-        self.contenta += '0'
+        self.content += '0'
 
     def one(self):
         if self.should_clear:
-            self.contenta = ''
+            self.content = ''
             self.should_clear = False
-        self.contenta += '1'
+        self.content += '1'
 
     def two(self):
         if self.should_clear:
-            self.contenta = ''
+            self.content = ''
             self.should_clear = False
-        self.contenta += '2'
+        self.content += '2'
 
     def three(self):
         if self.should_clear:
-            self.contenta = ''
+            self.content = ''
             self.should_clear = False
-        self.contenta += '3'
+        self.content += '3'
 
     def four(self):
         if self.should_clear:
-            self.contenta = ''
+            self.content = ''
             self.should_clear = False
-        self.contenta += '4'
+        self.content += '4'
 
     def five(self):
         if self.should_clear:
-            self.contenta = ''
+            self.content = ''
             self.should_clear = False
-        self.contenta += '5'
+        self.content += '5'
 
     def six(self):
         if self.should_clear:
-            self.contenta = ''
+            self.content = ''
             self.should_clear = False
-        self.contenta += '6'
+        self.content += '6'
 
     def seven(self):
         if self.should_clear:
-            self.contenta = ''
+            self.content = ''
             self.should_clear = False
-        self.contenta += '7'
+        self.content += '7'
 
     def eight(self):
         if self.should_clear:
-            self.contenta = ''
+            self.content = ''
             self.should_clear = False
-        self.contenta += '8'
+        self.content += '8'
 
     def nine(self):
         if self.should_clear:
-            self.contenta = ''
+            self.content = ''
             self.should_clear = False
-        self.contenta += '9'
+        self.content += '9'
 
     def bye(self):
         print('bye')
@@ -162,6 +167,7 @@ class MyWindow(TkOutWidget):
 
 if __name__ == '__main__':
     root = Tk()
-    window = MyWindow(root)
-    window.pack(fill='both', expand='1')
+    calculator = Calculator(root)
+    calculator.pack(fill='both', expand='1')
+    DEBUG = False
     root.mainloop()

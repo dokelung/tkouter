@@ -1,127 +1,34 @@
-# tkouter.py
-""" Module for creating tkinter layout by html.
-
-Creating GUI layout can be troublesome sometimes.
-This module provides a easy way that you can use familar html to create layout.
-Also, it can help you save lots of time on the settings of widgets, variable
-management and more.
-
-This module helps user to use MVC pattern to do GUI design.
-
-Available Classes:
-- TkOutWidget: Main class of tkouter module, you can inherit it to make your
-               own widget by using html-based layout
+""" core module of tkouter
 """
 
-_gvars = [
-    'WIDGETS',
-    'LOADER',
-    'DEBUG',
-]
 
-_apis = [
+__all__ =  [
     'register',
-]
-
-_classes = [
     'TkOutWidget',
-    'StringField',
 ]
 
-_errors = [
-    'Error',
-    'TagError',
-    'TagUnRecognizedError',
-    'DataNotExistError',
-    'ClassNotExistError',
-    'TagStartEndNotMatch',
-    'TagInWrongScope',
-    'TagStartEndTypeError',
-]
 
-__all__ = _gvars + _apis + _classes + _errors
-
-
-import html.parser
-from tkinter import *
+from html.parser import HTMLParser
+from tkinter import Frame, Menu
 from tkinter import ttk
-import inspect
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment
 
-
-# ========================================================================
-# global variables
-# ========================================================================
-WIDGETS = {
-    # widget tag type
-    'label': Label,
-    'entry': Entry,
-    'button': Button,
-    'spinbox': Spinbox,
-    'combobox': ttk.Combobox,
-    'listbox': Listbox,
-    'treeview': ttk.Treeview,
-    'notebook': ttk.Notebook,
-    'radiobutton': ttk.Radiobutton,
-    'checkbutton': ttk.Checkbutton,
-    # frame tag type
-    'frame': Frame,
-    'labelframe': ttk.LabelFrame,
-    # head tag type
-    'menu': Menu,
-}
-
-LOADER = FileSystemLoader('./')
-
-DEBUG = True
+from . import settings
+from .errors import *
 
 
-# ========================================================================
-# tkouter APIs
-# ========================================================================
 def register(name):
     """ function to add additional widget to BODY_WIDGETS
     usage: 
         register('my_widget_name')(MyWidgetClass) 
     """
     def _register(widget_cls):
-        WIDGETS[name] = widget_cls
+        settings.WIDGETS[name] = widget_cls
         return widget_cls
     return _register
 
 
-# ========================================================================
-# tkouter errors
-# ========================================================================
-class Error(Exception):
-    """ Base-class for all exceptions raised by this module. """
-
-class TagError(Error):
-    """ There is a problem in the tag of layout html. """
-
-class TagUnRecognizedError(TagError):
-    """ There is unknown tag in tkouter layout html. """
-
-class DataNotExistError(TagError):
-    """ can not find the data specified in tag from data_context. """
-
-class ClassNotExistError(TagError):
-    """ can not find the class specified in tag from classes. """
-
-class TagStartEndNotMatch(TagError):
-    """ start tag does not match end tag"""
-
-class TagInWrongScope(TagError):
-    """ tag in wrong scope """
-
-class TagStartEndTypeError(TagError):
-    """ tag with wrong start end type """
-
-
-# ========================================================================
-# tkouter layout
-# ========================================================================
 class TkOutWidget(Frame):
     """ Design a user-defined widget with html-based layout
 
@@ -136,8 +43,8 @@ class TkOutWidget(Frame):
     - context: used to render the layout if it is a template (dictionary)
     - data_context: used to query the data when building a widget. (dictionary)
     """
-    widgets = WIDGETS
-    loader = LOADER
+    widgets = settings.WIDGETS
+    loader = settings.LOADER
     layout = None
     classes = None
     context = {}
@@ -150,17 +57,17 @@ class TkOutWidget(Frame):
             self.data_context = {'self': self}
         user_widgets = self.widgets
         self.widgets = {}
-        self.widgets.update(WIDGETS)
+        self.widgets.update(settings.WIDGETS)
         self.widgets.update(user_widgets)
-        self._build()
+        self._build(settings.DEBUG)
 
-    def _build(self):
+    def _build(self, debug=False):
         """ create layout and define widget attribute by tkouter html """
         self.env = Environment(loader=self.loader)
         if self.layout:
             template = self.env.get_template(self.layout)
             self._html = template.render(self.context)
-        creator = TkOutWidgetCreator(self)
+        creator = TkOutWidgetCreator(self, debug)
         creator.feed(self._html)
 
     def _destruct(self):
@@ -490,17 +397,18 @@ class TkOutTag:
             self.parent_widget.add(child=self.widget, text=self.widget_name)
 
 
-class TkOutWidgetCreator(html.parser.HTMLParser):
+class TkOutWidgetCreator(HTMLParser):
     """ Create tkouter widget layout by html
 
     It is the core engine of html-based layout.
     User should not use it directly.
     """
 
-    def __init__(self, tkout_widget):
+    def __init__(self, tkout_widget, debug=False):
         super().__init__()
         self._tkoutw = tkout_widget
         self._tag_stack = []
+        self._debug = debug
 
     @property
     def _current_tag(self):
@@ -518,7 +426,7 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
 
     def _show_current_tag(self, se_type, tag_or_data, attrs=None):
         """ debug function """
-        if not DEBUG:
+        if not self._debug:
             return
         indent = len(self._tag_stack) * 4 * ' ' if se_type in ['start', 'startend', 'data'] else (len(self._tag_stack)-1) * 4 * ' '
         if se_type in ['start', 'end', 'startend']:
@@ -569,39 +477,3 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
             raise TagStartEndNotMatch(msg.format(self._current_tag._tag_name, tag))
         else:
             self._current_tag = None
-
-
-# ========================================================================
-# tkouter fields
-# ========================================================================
-class StringField:
-
-    def __init__(self, *, default=''):
-        self._var = None
-        self._default = default
-
-    @property
-    def var(self):
-        if self._var is None:
-            self._var = StringVar()
-            self._var.set(self._default)
-        else:
-            return self._var
-
-    def __get__(self, instance, owner):
-        return self.var.get()
-
-    def __set__(self, instance, value):
-        self.var.set(value)
-
-
-class MyStringField(StringField):
-
-    def __init__(self, *, length, **kwargs):
-        super().__init__(**kwargs)
-        self._length = length
-
-    def __set__(self, instance, value):
-        if len(self.var.get()) >= self._length:
-            return
-        self.var.set(value)

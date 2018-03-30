@@ -4,5 +4,5 @@ class ButtonClass:
     pack__fill = 'both'
     pack__expand = '1'
 
-class MyClass:
+class LayoutClass:
     button_cls = ButtonClass
