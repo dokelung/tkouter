@@ -25,7 +25,7 @@ _apis = [
 
 _classes = [
     'TkOutWidget',
-    'TkOutModel',
+    'StringField',
 ]
 
 _errors = [
@@ -120,7 +120,7 @@ class TagStartEndTypeError(TagError):
 
 
 # ========================================================================
-# tkouter classes
+# tkouter layout
 # ========================================================================
 class TkOutWidget(Frame):
     """ Design a user-defined widget with html-based layout
@@ -247,6 +247,8 @@ class TkOutTag:
                     for attr in attrs:
                         if hasattr(data, attr):
                             data = getattr(data, attr)
+                        elif attr in data.__class__.__dict__:
+                            data = data.__class__.__dict__[attr]
                         elif attr in data:
                             data = data[attr]
                     modified_options[name] = data
@@ -569,11 +571,37 @@ class TkOutWidgetCreator(html.parser.HTMLParser):
             self._current_tag = None
 
 
-class TkOutModel:
+# ========================================================================
+# tkouter fields
+# ========================================================================
+class StringField:
 
-    def __init__(self):
-        attrs = inspect.getmembers(self, lambda a: not(inspect.isroution(a)))
-        attrs = [a for a in attrs if not(a[0].startswith('__') and a[0].endswith('__'))]
-        for a in attrs:
-            attr = getattr(self, a)
-            setattr(self, a, property(lambda attr: attr.get()))
+    def __init__(self, *, default=''):
+        self._var = None
+        self._default = default
+
+    @property
+    def var(self):
+        if self._var is None:
+            self._var = StringVar()
+            self._var.set(self._default)
+        else:
+            return self._var
+
+    def __get__(self, instance, owner):
+        return self.var.get()
+
+    def __set__(self, instance, value):
+        self.var.set(value)
+
+
+class MyStringField(StringField):
+
+    def __init__(self, *, length, **kwargs):
+        super().__init__(**kwargs)
+        self._length = length
+
+    def __set__(self, instance, value):
+        if len(self.var.get()) >= self._length:
+            return
+        self.var.set(value)
