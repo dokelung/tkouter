@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 
-from tkinter import StringVar
+from tkinter import StringVar, BooleanVar, IntVar
 
 
 class StringField:
