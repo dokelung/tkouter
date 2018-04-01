@@ -1,0 +1,26 @@
+<html>
+    <head>
+        <title> Random Selector </title>
+        <menu>
+            <menu label="Command" underline="0">
+                <command command="{self.select}"> Select </command>
+                <command command="{self.add}"> Add </command>
+                <separator />
+                <command command="{self.quit}"> Quit </command>
+            </menu>
+            <menu label="View" underline="0">
+                <checkbutton label="Hide items" onvalue="1" offvalue="0" variable="{self.hide.var}" command="{self.show}" />
+            </menu>
+        </menu>
+    </head>
+    <body>
+        <left>
+            <entry width="30" textvariable="{self.item.var}" />
+            <button class="button" text="Select" command="{self.select}" />
+            <button class="button" text="Add" command="{self.add}" />
+        </left>
+        <top type="labelframe" name="itemframe" text="Items" pack-fill="both" pack-expand="1">
+            <listbox name="listbox" pack-fill="both" pack-expand="1" />
+        </top>
+    </body>
+</html>

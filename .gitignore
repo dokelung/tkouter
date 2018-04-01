@@ -3,3 +3,4 @@ tkouter/__pycache__
 dist
 tkouter.egg-info
 build
+demo/*/tkouter
