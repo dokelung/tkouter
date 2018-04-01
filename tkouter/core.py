@@ -173,7 +173,7 @@ class TkOutTag:
             for cname in cls_lst:
                 if not hasattr(self._tkoutw.classes, cname):
                     msg = 'class "{}" does not exists'
-                    raise ClassNotExist(msg.format(cname))
+                    raise ClassNotExistError(msg.format(cname))
                 c = getattr(self._tkoutw.classes, cname)
                 for attr, value in c.__dict__.items():
                     if attr.startswith('_'):
