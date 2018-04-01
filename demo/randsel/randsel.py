@@ -1,6 +1,6 @@
 import random
 
-from tkinter import Tk, BooleanVar
+from tkinter import Tk
 
 from tkouter import *
 from tkouter import settings
