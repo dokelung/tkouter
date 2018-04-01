@@ -3,6 +3,8 @@
 
 __all__ = [
     'StringField',
+    'BoolField',
+    'IntField',
 ]
 
 
