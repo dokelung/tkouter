@@ -16,7 +16,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='tkouter',
 
-    version='1.0.0a4',
+    version='1.0.0a5',
 
     description='Package for creating tkinter layout by html',
 
@@ -54,9 +54,9 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
 
-    keywords='tkinter gui layout mvc html',  # Optional
+    keywords='tkinter gui layout mvc html xml css',  # Optional
 
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
 
-    install_requires=['jinja2'],
+    install_requires=['jinja2', 'lxml', 'tinycss'],
 )
