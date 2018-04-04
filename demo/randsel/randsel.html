@@ -1,9 +1,10 @@
 <html>
     <head>
         <title> Random Selector </title>
+        <link rel="stylesheet" type="text/css" href="randsel.css" />
         <menu>
             <menu label="Command" underline="0">
-                <command command="{self.select}"> Select </command>
+                <command command="{self.sel}"> Select </command>
                 <command command="{self.add}"> Add </command>
                 <separator />
                 <command command="{self.quit}"> Quit </command>
@@ -16,8 +17,8 @@
     <body>
         <left>
             <entry width="30" textvariable="{self.item.var}" />
-            <button class="button" text="Select" command="{self.select}" />
-            <button class="button" text="Add" command="{self.add}" />
+            <button class="btn" text="Select" command="{self.sel}" />
+            <button class="btn" text="Add" command="{self.add}" />
         </left>
         <top type="labelframe" name="itemframe" text="Items" pack-fill="both" pack-expand="1">
             <listbox name="listbox" pack-fill="both" pack-expand="1" />

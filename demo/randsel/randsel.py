@@ -20,7 +20,7 @@ class RandomSelector(TkOutWidget):
         super().__init__(master)
         self._items = []
 
-    def select(self):
+    def sel(self):
         if self._items:
             self.item = random.choice(self._items)
 
