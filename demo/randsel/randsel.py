@@ -6,18 +6,11 @@ from tkouter import *
 from tkouter import settings
 
 
-class ButtonClass:
-    width = 8
-
-class LayoutClass:
-    button = ButtonClass
-
 
 class RandomSelector(TkOutWidget):
 
     # layout
     layout = 'randsel.html'
-    classes = LayoutClass
 
     # model
     item = StringField(default='Item Name')
