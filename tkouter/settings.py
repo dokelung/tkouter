@@ -1,7 +1,6 @@
 __all__ = [
     'WIDGETS',
     'LOADER',
-    'DEBUG',
 ]
 
 
@@ -31,5 +30,3 @@ WIDGETS = {
 }
 
 LOADER = FileSystemLoader('./')
-
-DEBUG = False
