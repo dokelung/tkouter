@@ -6,21 +6,10 @@ from tkouter import *
 from tkouter import settings
 
 
-class ButtonClass:
-    width = 5
-    height = 3
-    pack__fill = 'both'
-    pack__expand = '1'
-
-class LayoutClass:
-    button_cls = ButtonClass
-
-
 class Calculator(TkOutWidget):
 
     # layout
     layout = 'cal.html'
-    classes = LayoutClass
 
     # model
     content = StringField(default='0', max_length=20)
