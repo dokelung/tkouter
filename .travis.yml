@@ -1,0 +1,12 @@
+language: python
+python:
+  - "3.5"
+  - "3.6"
+cache: pip
+install:
+  - pip install coverage
+  - pip install tkouter
+script:
+  - coverage run -m unittest discover
+after_success:
+  - coveralls
