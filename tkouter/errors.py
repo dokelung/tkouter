@@ -6,10 +6,7 @@ __all__ = [
     'TagError',
     'TagUnRecognizedError',
     'DataNotExistError',
-    'ClassNotExistError',
-    'TagStartEndNotMatch',
     'TagInWrongScope',
-    'TagStartEndTypeError',
 ]
 
 
@@ -25,14 +22,5 @@ class TagUnRecognizedError(TagError):
 class DataNotExistError(TagError):
     """ can not find the data specified in tag from data_context. """
 
-class ClassNotExistError(TagError):
-    """ can not find the class specified in tag from classes. """
-
-class TagStartEndNotMatch(TagError):
-    """ start tag does not match end tag"""
-
 class TagInWrongScope(TagError):
     """ tag in wrong scope """
-
-class TagStartEndTypeError(TagError):
-    """ tag with wrong start end type """
