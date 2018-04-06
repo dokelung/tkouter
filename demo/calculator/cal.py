@@ -24,7 +24,7 @@ class Calculator(TkOutWidget):
     def clear(self):
         self.operator = None
         self.cache = None
-        self.content = 0
+        self.content = '0'
         self.should_clear = True
 
     def add(self):
