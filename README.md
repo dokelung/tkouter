@@ -66,6 +66,7 @@ $ git clone https://github.com/dokelung/tkouter.git
 * [Jinja2](http://jinja.pocoo.org/docs/2.10/)
 * [lxml](http://lxml.de/)
 * [tinycss](https://tinycss.readthedocs.io/en/latest/index.html)
+* [cssslect](https://cssselect.readthedocs.io/en/latest/)
 
 ## Features
 
