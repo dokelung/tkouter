@@ -1,40 +1,39 @@
 <html>
-    <head window="{ self.parent }">
-        <callback function="{ self.parent.title }" string="MyCalculator">
-        <menu type="menu" name="top_menu">
-            <menu type="menu" name="cal_menu" sp-label="calculator" sp-underline="0">
-                <callback function="{ self.cal_menu.add_checkbutton }" label="test menu function" onvalue="1" offvalue="0">
-                <callback function="{ self.cal_menu.add_separator }">
-                <callback function="{ self.cal_menu.add_command }" label="Quit" accelerator="">
+    <head>
+        <title> Simple Calculator </title>
+        <link rel="stylesheet" type="text/css" href="cal.css" />
+        <menu>
+            <menu label="calculator" underline="0">
+                <command command="{ self.quit }"> Quit </command>
             </menu>
         </menu>
     </head>
     <body>
-        <widget type='notebook' name='nb'>
-        <top type="frame" name="topf1">
-            <top type="frame" name="main">
-                <left type="frame" name="f1">
-                    <widget type="label" name="labela" textvariable="{ self.labelvara }" width="10">
-                    <widget type="entry" name="entrya" textvariable="{ self.contenta }" bg="white" width="30">
-                </left>
-                <left type="frame" name="f2">
-                    <widget type="label" name="labelb" textvariable="{ self.labelvarb }" width="10">
-                    <widget type="entry" name="entryb" textvariable="{ self.contentb }" bg="white" width="30">
+        <notebook>
+            <top name="calculator">
+                <top>
+                    <left>
+                        <label textvariable="{ self.labela.var }" width="10" />
+                        <entry textvariable="{ self.contenta.var }" bg="white" width="30" />
+                    </left>
+                    <left>
+                        <label textvariable="{ self.labelb.var }" width="10" />
+                        <entry textvariable="{ self.contentb.var }" bg="white" width="30" />
+                    </left>
+                </top>
+                <top pack-fill="x">
+                    <left type="labelframe" text="Action" pack-fill="x">
+                        <button text="+" command="{ self.add }" />
+                        <button text="-" command="{ self.sub }" />
+                        <button text="*" command="{ self.mul }" />
+                        <button text="/" command="{ self.div }" />
+                    </left>
+                </top>
+                <left>
+                    <label textvariable="{ self.labelc.var }" width="10" />
+                    <entry textvariable="{ self.contentc.var }" bg="white" width="30" />
                 </left>
             </top>
-            <top type="frame" name="f3" sp-fill="x">
-                <left type="labelframe" name="cal" text="Action" sp-fill="x">
-                    <widget type="button" name="button_add" class="button_cls" text="+" command="{ self.add }">
-                    <widget type="button" name="button_sub" class="button_cls" text="-" command="{ self.sub }">
-                    <widget type="button" name="button_mul" class="button_cls" text="*" command="{ self.mul }">
-                    <widget type="button" name="button_div" class="button_cls" text="/" command="{ self.div }">
-                </left>
-            </top>
-            <left type="frame" name="f4">
-                <widget type="label" name="labelc" textvariable="{ self.labelvarc }" width="10">
-                <widget type="entry" name="entryc" textvariable="{ self.contentc }" bg="white" width="30">
-            </left>
-        </top>
-        <callback function="{ self.nb.add }" child="{ self.topf1 }" text="run">
+        </notebook>
     </body>
 </html>
