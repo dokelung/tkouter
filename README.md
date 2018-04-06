@@ -1,5 +1,8 @@
 # tkouter
 
+![](https://img.shields.io/pypi/v/tkouter.svg)
+![](https://img.shields.io/pypi/pyversions/tkouter.svg)
+
 [README 中文版](讀我.md)
 
 ## Taste it
