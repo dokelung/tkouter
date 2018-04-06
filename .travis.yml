@@ -4,7 +4,7 @@ python:
   - "3.6"
 cache: pip
 install:
-  - pip install coverage
+  - pip install coveralls
   - pip install tkouter
 before_script:
   - "export DISPLAY=:99.0"
