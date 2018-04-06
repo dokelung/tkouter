@@ -5,3 +5,4 @@ tkouter.egg-info
 build
 demo/*/tkouter
 demo/*/__pycache__
+.coverage
