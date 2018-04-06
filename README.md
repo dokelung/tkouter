@@ -3,6 +3,7 @@
 ![](https://img.shields.io/pypi/v/tkouter.svg)
 ![](https://img.shields.io/pypi/pyversions/tkouter.svg)
 [![Build Status](https://travis-ci.org/dokelung/tkouter.svg?branch=master)](https://travis-ci.org/dokelung/tkouter)
+![Coveralls github](https://img.shields.io/coveralls/github/dokelung/tkouter.svg)
 
 [README 中文版](讀我.md)
 
