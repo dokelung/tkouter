@@ -32,8 +32,8 @@ class StringField:
         return self.var.get()
 
     def __set__(self, instance, value):
-        if len(self.var.get()) >= self._max_length:
-            return
+        if len(value) >= self._max_length:
+            value = value[:self._max_length]
         self.var.set(value)
 
 
