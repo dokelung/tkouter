@@ -13,7 +13,7 @@ from html.parser import HTMLParser
 from tkinter import Frame, Menu
 from tkinter import ttk
 
-from jinja2 import Environment
+from jinja2 import Environment, Template
 from lxml import etree
 from lxml.cssselect import CSSSelector
 import tinycss
@@ -43,6 +43,7 @@ class TkOutElement(etree.ElementBase):
         self.data_context = tkoutw.data_context
 
         self._widget = None
+        self._name = None
         self._options = {}
         self._widget_method_options = {}
 
@@ -64,8 +65,9 @@ class TkOutElement(etree.ElementBase):
             raise TagUnRecognizedError(msg.format(self.tag))
 
     def _check_scope(self):
-        if self.is_html:
-            assert(self.getparent().is_html)
+        if not (self.is_html or self.is_scope or self.is_under_head or self.is_under_body):
+            msg = 'tag <{}> should be under tag <head> or <body>'
+            raise TagInWrongScope(msg.format(self.tag))
         elif self.is_under_head and not self.can_under_head:
             msg = 'tag <{}> should not be under scope tag <head>'
             raise TagInWrongScope(msg.format(self.tag))
@@ -260,17 +262,15 @@ class TkOutElement(etree.ElementBase):
 
     @property
     def widget_name(self):
-        if self.has_widget_cls:
-            name = self.get('name')
-            if name is None:
+        if self.has_widget_cls and self._name is None:
+            self._name = self.get('name')
+            if self._name is None:
                 if self.widget_type in self.widget_type_counter:
                     self.widget_type_counter[self.widget_type] += 1
                 else:
                     self.widget_type_counter[self.widget_type] = 0
-                name = self.widget_type + '_' + str(self.widget_type_counter[self.widget_type])
-        else:
-            name = None
-        return name
+                self._name = self.widget_type + '_' + str(self.widget_type_counter[self.widget_type])
+        return self._name
 
     @property
     def widget_cls(self):
@@ -278,13 +278,14 @@ class TkOutElement(etree.ElementBase):
 
     @property
     def parent_widget(self):
-        if self.getparent().has_widget:
-            return self.getparent().widget
-        else:
-            if self.getparent().is_head:
-                return self.tkoutw.parent
-            elif self.getparent().is_body:
-                return self.tkoutw
+        if self.getparent() is not None:
+            if self.getparent().has_widget:
+                return self.getparent().widget
+            else:
+                if self.getparent().is_head:
+                    return self.tkoutw.parent
+                elif self.getparent().is_body:
+                    return self.tkoutw
         return None
 
     @property
@@ -304,7 +305,7 @@ class TkOutElement(etree.ElementBase):
 
     # core function
     def display(self):
-        if self.is_html or self.is_head or self.is_body or self.is_link:
+        if self.is_html or self.is_scope or self.is_link:
             pass
         elif self.is_under_head:
             if self.is_sub_menu:
@@ -316,14 +317,10 @@ class TkOutElement(etree.ElementBase):
             elif self.is_root_attr:
                 func = getattr(self.parent_widget, self.tag)
                 func(self._options['root_attr'])
-            else:
-                assert(0)
         elif self.is_under_body:
             self.widget.pack(**self.pack_options)
             if self.getparent().is_notebook:
                 self.parent_widget.add(child=self.widget, text=self.widget_name)
-        else:
-            assert(0)
 
 
 class TkOutWidget(Frame):
@@ -362,7 +359,7 @@ class TkOutWidget(Frame):
             template = env.get_template(self.layout)
             self._html = template.render(self.context)
         else:
-            self._html = self.layout
+            self._html = Template(self.layout).render(self.context)
 
         # lxml parser
         parser_lookup = etree.ElementDefaultClassLookup(element=TkOutElement)
