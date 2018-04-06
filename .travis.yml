@@ -5,7 +5,10 @@ python:
 cache: pip
 install:
   - pip install coveralls
-  - pip install tkouter
+  - pip install jinja2
+  - pip install lxml
+  - pip install tinycss
+  - pip install cssselect
 before_script:
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
