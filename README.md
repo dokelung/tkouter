@@ -2,19 +2,48 @@
 
 [README 中文版](讀我.md)
 
+## Taste it
+
+```python
+from tkinter import Tk, messagebox
+from tkouter import *
+
+
+class HelloWorld(TkOutWidget):
+    layout = """
+        <html>
+            <head>
+                <title> hello world </title>
+            </head>
+            <body>
+                <button width="20" command="{self.hello}">
+                    Click
+                </button>
+            </body>
+        </html>"""
+
+    def hello(self):
+        messagebox.showinfo('welcome to tkouter', 'hello world')
+
+
+if __name__ == '__main__':
+    root = Tk()
+    hl = HelloWorld(root)
+    hl.pack()
+    root.mainloop()
+```
+
+## Introduction
+
 Creating GUI layout can be troublesome sometimes.
 This package provides an easy way that you can use familar html to create layout.
 Also, it can help you save lots of time on the settings of widgets, variable
 management and more.
 This package helps user to use MVC pattern to do GUI design.
 
-## Contents
-
-* [Installation](#installation)
-* [Requirements](#requirements)
-* [Taste it](#taste-it)
-
 ## Installation
+
+Use pip:
 
 ```sh
 $ pip install tkouter
@@ -30,3 +59,10 @@ $ git clone https://github.com/dokelung/tkouter.git
 
 * Python3.5 or later
 * [Jinja2](http://jinja.pocoo.org/docs/2.10/)
+* [lxml](http://lxml.de/)
+* [tinycss](https://tinycss.readthedocs.io/en/latest/index.html)
+
+## Features
+
+* Use html (xml) to layout
+* Support css to config widgets
