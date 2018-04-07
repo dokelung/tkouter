@@ -1,2 +1,7 @@
 [run]
-source=.
+source = .
+
+[report]
+omit =
+    setup.py
+    test/*
