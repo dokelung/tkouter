@@ -1,0 +1,6 @@
+.button_cls {
+    width: 5;
+    height: 3;
+    pack-fill: both;
+    pack-expand: 1;
+}

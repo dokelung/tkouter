@@ -1,0 +1,51 @@
+<html>
+    <head>
+        <title> Calculator </title>
+        <link rel="stylesheet" type="text/css" href="cal.css" />
+        <menu>
+            <menu label="calculator" underline="0">
+                <checkbutton label="test menu function" onvalue="1" offvalue="0" />
+                <radiobutton variable="" value="1">Option 1</radiobutton>
+                <radiobutton variable="" value="2">Option 2</radiobutton>
+                <separator />
+                <command accelerator="" command="{ self.bye }"> Quit </command>
+            </menu>
+        </menu>
+    </head>
+    <body pack-fill="both" pack-expand="1">
+        <grid type="frame" name="main" pack-fill="both" pack-expand="1">
+            <gr>
+                <gd columnspan="4"><entry textvariable="{ self.content.var }" bg="white" /></gd>
+            </gr>
+            <gr>
+                <gd><button class="button_cls" text="C" command="{ self.clear }" /></gd>
+                <gd><button class="button_cls" text="^" command="{ self.neg }" /></gd>
+                <gd><button class="button_cls" text="%" command="{ self.percent }" /></gd>
+                <gd><button class="button_cls" text="/" command="{ self.div }" /></gd>
+            </gr>
+            <gr>
+                <gd><button class="button_cls" text="7" command="{ self.seven }" /></gd>
+                <gd><button class="button_cls" text="8" command="{ self.eight }" /></gd>
+                <gd><button class="button_cls" text="9" command="{ self.nine }" /></gd>
+                <gd><button class="button_cls" text="X" command="{ self.mul }" /></gd>
+            </gr>
+            <gr>
+                <gd><button class="button_cls" text="4" command="{ self.four }" /></gd>
+                <gd><button class="button_cls" text="5" command="{ self.five }" /></gd>
+                <gd><button class="button_cls" text="6" command="{ self.six }" /></gd>
+                <gd><button class="button_cls" text="-" command="{ self.sub }" /></gd>
+            </gr>
+            <gr>
+                <gd><button class="button_cls" text="1" command="{ self.one }" /></gd>
+                <gd><button class="button_cls" text="2" command="{ self.two }" /></gd>
+                <gd><button class="button_cls" text="3" command="{ self.three }" /></gd>
+                <gd><button class="button_cls" text="+" command="{ self.add }" /></gd>
+            </gr>
+            <gr>
+                <gd columnspan="2" sticky="nesw"><button class="button_cls" text="0" command="{ self.zero }" /></gd>
+                <gd><button class="button_cls" text="." command="{ self.dot }" /></gd>
+                <gd><button class="button_cls" text="=" command="{ self.equal }" /></gd>
+            </gr>
+        </grid>
+    </body>
+</html>
