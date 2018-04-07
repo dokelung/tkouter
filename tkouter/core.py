@@ -33,6 +33,59 @@ def register(name):
     return _register
 
 
+class TkGridMgr:
+
+    def __init__(self):
+        self._segments = {}
+
+    def get_column(self, row, rowspan=1, colspan=1):
+        rsegments = self._segments.setdefault(row, [])
+        if not rsegments:
+            return 0
+        lo = rsegments[0][0]
+        hi = rsegments[-1][-1]
+        for col in range(0, hi + 2):
+            if self._has_space(row, col, rowspan, colspan):
+                return col
+
+    def add_column(self, row, col, rowspan=1, colspan=1):
+        for r in range(row, row + rowspan):
+            rsegments = self._segments.setdefault(r, [])
+            rsegments.append((col, col + colspan - 1))
+            self._segments[r] = self._merge_segments(rsegments)
+
+    def _has_space(self, row, col, rowspan=1, colspan=1):
+        LO, HI = 0, 1
+        test = (col, col + colspan - 1)
+        for r in range(row, row + rowspan):
+            rsegments = self._segments.setdefault(r, [])
+            for seg in rsegments:
+                if seg[HI] < test[LO]:
+                    continue
+                elif seg[LO] > test[HI]:
+                    break
+                else:
+                    return False
+        return True
+
+    @staticmethod
+    def _merge_segments(segments):
+        LO, HI = 0, 1
+        segments = sorted(segments, key=lambda seg: seg[LO])
+        merged = []
+        for higher in segments:
+            if not merged:
+                merged.append(higher)
+            else:
+                lower = merged[-1]
+                if higher[LO] <= lower[HI] or (higher[LO] - 1 == lower[HI]):
+                    upper_bound = max(lower[HI], higher[HI])
+                    merged[-1] = (lower[LO], upper_bound)
+                else:
+                    merged.append(higher)
+        return merged
+
+
 class TkOutElement(etree.ElementBase):
 
     def init(self, tkoutw):
@@ -50,13 +103,15 @@ class TkOutElement(etree.ElementBase):
         if self.is_html:
             return
 
-        # parse option
-        self._parse_options()
-        self._init_pack_options()
-
         # check
         self._check_valid()
         self._check_scope()
+
+        # parse option
+        self._gridmgr = TkGridMgr() if self.is_grid else None
+        self._parse_options()
+        self._init_pack_options()
+        self._init_grid_options()
 
     # top checker
     def _check_valid(self):
@@ -72,10 +127,19 @@ class TkOutElement(etree.ElementBase):
             msg = 'tag <{}> should not be under scope tag <head>'
             raise TagInWrongScope(msg.format(self.tag))
         elif self.is_under_menu and not self.can_under_menu:
-            msg = 'tag <{}> should not be under scope tag <menu>'
+            msg = 'tag <{}> should not be under tag <menu>'
             raise TagInWrongScope(msg.format(self.tag))
         elif self.is_under_body and not self.can_under_body:
             msg = 'tag <{}> should not be under scope tag <body>'
+            raise TagInWrongScope(msg.format(self.tag))
+        elif self.is_in_grid and not self.can_in_grid:
+            msg = 'tag <{}> should not be in tag <grid>'
+            raise TagInWrongScope(msg.format(self.tag))
+        elif self.is_in_gr and not self.can_in_gr:
+            msg = 'tag <{}> should not be in tag <gr>'
+            raise TagInWrongScope(msg.format(self.tag))
+        elif self.is_in_gd and not self.can_in_gd:
+            msg = 'tag <{}> should not be in tag <gd>'
             raise TagInWrongScope(msg.format(self.tag))
 
     # option parsing
@@ -142,9 +206,21 @@ class TkOutElement(etree.ElementBase):
             if 'side' not in pack_options:
                 if self.getparent().is_body or self.getparent().is_notebook:
                     pack_options['side'] = 'top'
-                else:
+                elif self.getparent().is_side:
                     pack_options['side'] = self.getparent().tag
-                    assert(pack_options['side'] in ['top', 'bottom', 'left', 'right'])
+
+    def _init_grid_options(self):
+        if self.is_gd:
+            gr = self.getparent()
+            grid = gr.getparent()
+            if 'row' not in self.grid_options:
+                self.grid_options['row'] = row = grid.index(gr)
+            if 'column' not in self.grid_options:
+                rowspan = int(self.grid_options.get('rowspan', 1))
+                colspan = int(self.grid_options.get('columnspan', 1))
+                col = self.gridmgr.get_column(row, rowspan, colspan)
+                self.grid_options['column'] = col
+                self.gridmgr.add_column(row, col, rowspan, colspan)
 
     # tag category
     @property
@@ -180,6 +256,22 @@ class TkOutElement(etree.ElementBase):
         return self.tag in ['top', 'bottom', 'left', 'right']
 
     @property
+    def is_grid(self):
+        return self.tag == 'grid'
+
+    @property
+    def is_gr(self):
+        return self.tag == 'gr'
+
+    @property
+    def is_gd(self):
+        return self.tag == 'gd'
+
+    @property
+    def is_grid_element(self):
+        return self.is_gr or self.is_gd
+
+    @property
     def is_menu(self):
         return self.has_widget_cls and issubclass(self.widget_cls, Menu)
 
@@ -213,6 +305,18 @@ class TkOutElement(etree.ElementBase):
         return self.getparent().is_body or self.getparent().is_under_body
 
     @property
+    def is_in_grid(self):
+        return self.getparent().is_grid
+
+    @property
+    def is_in_gr(self):
+        return self.getparent().is_gr
+
+    @property
+    def is_in_gd(self):
+        return self.getparent().is_gd
+
+    @property
     def can_under_head(self):
         return self.is_root_attr or self.is_link or self.is_menu or self.can_under_menu
 
@@ -222,12 +326,24 @@ class TkOutElement(etree.ElementBase):
 
     @property
     def can_under_body(self):
-        return self.tag in self.widgets or self.is_side
+        return (self.tag in self.widgets and not self.is_menu) or self.is_side or self.is_grid or self.is_grid_element
+
+    @property
+    def can_in_grid(self):
+        return self.is_gr
+
+    @property
+    def can_in_gr(self):
+        return self.is_gd
+
+    @property
+    def can_in_gd(self):
+        return self.can_under_body and not self.is_grid_element
 
     # widget checker
     @property
     def has_no_widget_type(self):
-        return self.is_html or self.is_scope or self.tag in ['title']
+        return self.is_html or self.is_scope or self.is_root_attr or self.is_grid_element
 
     @property
     def has_widget_type(self):
@@ -247,14 +363,18 @@ class TkOutElement(etree.ElementBase):
 
     @property
     def has_widget(self):
-        return self.is_under_body or self.is_menu
+        return self.widget is not None
+
+    @property
+    def has_gridmgr(self):
+        return self._gridmgr is not None
 
     # widget attr
     @property
     def widget_type(self):
         if self.has_no_widget_type:
             t = None
-        elif self.is_side:
+        elif self.is_side or self.is_grid:
             t = self.get('type') or'frame'
         else:
             t = self.get('type') or self.tag
@@ -279,23 +399,36 @@ class TkOutElement(etree.ElementBase):
     @property
     def parent_widget(self):
         if self.getparent() is not None:
-            if self.getparent().has_widget:
-                return self.getparent().widget
+            if self.getparent().is_head:
+                return self.tkoutw.parent
+            elif self.getparent().is_body:
+                return self.tkoutw
+            elif self.getparent().is_gd:
+                return self.getparent().getparent().getparent().widget
             else:
-                if self.getparent().is_head:
-                    return self.tkoutw.parent
-                elif self.getparent().is_body:
-                    return self.tkoutw
+                return self.getparent().widget
         return None
+
+    @property
+    def gridmgr(self):
+        if self.is_grid:
+            return self._gridmgr
+        elif self.is_gd:
+            return self.getparent().getparent().gridmgr
 
     @property
     def pack_options(self):
         return self._widget_method_options['pack']
 
     @property
+    def grid_options(self):
+        return self._options
+
+    @property
     def widget(self):
         if self._widget is None:
-            if self.is_under_body:
+            assert(self.parent_widget)
+            if self.is_under_body and not self.is_grid_element:
                 self._widget = self.widget_cls(self.parent_widget, **self._options)
                 setattr(self.tkoutw, self.widget_name, self._widget)
             elif self.is_menu:
@@ -305,7 +438,7 @@ class TkOutElement(etree.ElementBase):
 
     # core function
     def display(self):
-        if self.is_html or self.is_scope or self.is_link:
+        if self.is_html or self.is_scope or self.is_link or self.is_grid_element:
             pass
         elif self.is_under_head:
             if self.is_sub_menu:
@@ -318,7 +451,10 @@ class TkOutElement(etree.ElementBase):
                 func = getattr(self.parent_widget, self.tag)
                 func(self._options['root_attr'])
         elif self.is_under_body:
-            self.widget.pack(**self.pack_options)
+            if self.is_in_gd:
+                self.widget.grid(**self.getparent().grid_options)
+            else:
+                self.widget.pack(**self.pack_options)
             if self.getparent().is_notebook:
                 self.parent_widget.add(child=self.widget, text=self.widget_name)
 
