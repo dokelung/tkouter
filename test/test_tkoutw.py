@@ -16,6 +16,7 @@ layout_html = """
         <html>
             <head>
                 <title> test </title>
+                <geometry> 100x100+100+100 </geometry>
                 <link rel="stylesheet" type="text/css" href="{{css_name}}" />
                 <menu>
                     <command> menu command </command>
@@ -127,6 +128,7 @@ class TestTkOutWidget(unittest.TestCase):
         head = self.select_one_element('head')
         body = self.select_one_element('body')
         title = self.select_one_element('title')
+        geometry = self.select_one_element('geometry')
         css = self.select_one_element('link')
         top_menu = self.select_one_element('head > menu')
         sub_menu = self.select_one_element('menu > menu')
@@ -145,7 +147,7 @@ class TestTkOutWidget(unittest.TestCase):
         # tag category
         self.assertTrue(html.is_html)
         self.assertTrue(head.is_head)
-        self.assertTrue(title.is_root_attr)
+        self.assertTrue(title.is_root_attr and geometry.is_root_attr)
         self.assertTrue(css.is_link)
         self.assertTrue(css.is_css)
         self.assertTrue(body.is_body)

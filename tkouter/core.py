@@ -233,7 +233,7 @@ class TkOutElement(etree.ElementBase):
 
     @property
     def is_root_attr(self):
-        return self.tag in ['title']
+        return self.tag in ['title', 'geometry']
 
     @property
     def is_link(self):
