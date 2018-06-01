@@ -6,3 +6,4 @@ build
 demo/*/tkouter
 demo/*/__pycache__
 .coverage
+docs_build
