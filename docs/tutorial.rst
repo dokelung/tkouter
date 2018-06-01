@@ -1,0 +1,395 @@
+入門八步
+========
+
+我們將會使用 專案範例_ 中的 隨機選擇器_ 來作為我們的第一個使用範例。這個隨機選擇器可以讓使用者自訂多個選擇項目，並且從中做出一個隨機的選擇。
+
+.. _專案範例: https://github.com/dokelung/tkouter/tree/master/demo
+.. _隨機選擇器: https://github.com/dokelung/tkouter/tree/master/demo/randsel
+
+.. note::
+    1. 請確定已安裝了相容的 Python 版本、tkouter 和其他相關的套件。
+    2. 在這份入門指引中我們會使用到三個檔案，分別是描述佈局的 `randsel.html`、`randsel.css` 和元件實作所在的 `randsel.py`。
+    3. 請將上述三個文件放置在同一個目錄下，如果你並沒有安裝 tkouter，而僅僅只是將之下載下來的話，請一並將 tkouter 套件目錄放置到同一個目錄中。
+
+第一步：使用 html 來佈局視窗程式
+--------------------------------
+
+一個基本的 tkouter 元件需要使用一個對應的 html 文件來描述佈局 (layout)，下面是初始版本的佈局 html 及其對應的說明與實際視圖：
+
+::
+
+    <html>
+        <head>
+            <title> Random Selector </title>
+        </head>
+        <body>
+            <left>
+                <entry width="30" />
+                <button width="8" text="Select" />
+                <button width="8" text="Add" />
+            </left>
+            <top type="labelframe" text="Items">
+                <listbox />
+            </top>
+        </body>
+    </html>
+
+
+* 如同標準的 html 文件，我們在最外層要使用成對的 ``<html>`` 標籤夾住整份文件。
+
+.. note::
+    ``<html>`` 下分別有成對的 ``<head>`` 標籤和 ``<body>`` 標籤，``<head>`` 標籤不是每次都會出現的，只有當我們製作的 tkouter 元件是頂層元件時(其 parent 是 ``TK``)才需要這個標籤。
+
+``<head>``
+  用來設定一些 tkouter 的上層資訊，像是視窗名稱、選單資訊等。
+``<body>``
+  用來佈局實際使用到的元件。
+``<title>``
+  用來設定視窗的名稱。
+
+.. note::
+    要注意，若這個元件的 parent 不是 ``TK`` 的話，是不允許使用 ``<title>`` 的。
+
+``<top>``
+  夾住的元件會由上至下擺置，而 ``<left>`` 標籤夾住的元件會由左至右擺置。
+
+.. note::
+    tkouter 一共提供四種 ``pack`` 用的 **佈局標籤**，分別是 ``<top>``, ``<bottom>``, ``<left>`` 和 ``<right>``，
+    這四個標籤需要成對出現，會產生 ``Frame`` 元件來佈局其下的元件，我們也可以用 ``type`` 屬性指定其他的 frame 類別，例如此處的 ``LabelFrame``。
+
+``<entry>``
+  會產生一個 ``Entry`` 元件，在這個例子中我們用 html 的標籤屬性 ``width="30"`` 來將該元件的長度設定為 30。
+``<button>``
+  會產生一個 ``Button`` 元件，我們在此一樣透過屬性設定其寬度與文字。
+``<listbox>``
+  會產生一個 ``ListBox`` 元件。
+
+.. note::
+    對於有 ``text`` 屬性的元件，tkouter 支援成對的標籤，標籤中夾住的文字將會變成元件的 text 值。
+    但在這個範例中，我們都使用顯性的 html 屬性 `text` 來設定元件的文字。
+    要特別注意的是，由於 tkouter 是使用標準的 xml parser 來進行剖析的，所以非成對的單標籤必須得加上 ``/`` 來符合規則。
+
+等等會產生的對應視圖如下：
+
+.. image:: ../demo/randsel/version-1.png
+
+
+第二步：實作自訂元件
+--------------------
+
+接下來我們可以在 `randsel.py` 中實作我們的 GUI 元件：
+
+::
+
+    # randsel.py
+    from tkinter import Tk
+    from tkouter import *
+    
+    
+    class RandomSelector(TkOutWidget):
+    
+        # layout
+        layout = 'randsel.html'
+    
+        def __init__(self, master):
+            super().__init__(master)
+    
+    
+    if __name__ == '__main__':
+        root = Tk()
+        rs = RandomSelector(root)
+        rs.pack()
+        root.mainloop()
+
+
+要使用 tkouter，務必先從其中匯入相關的類別和函式，我們這裡使用 ``from tkouter import *`` 來匯入所有可用類別和函式。
+
+``TkOutWidget`` 是 tkouter 中最重要的類別，所有的 tkouter 元件都需要繼承自此類別。其中，我們使用 class variable ``ayout`` 來指定一個 html 文件用以描述該元件的佈局。
+
+除此之外，為了能夠順利地藉由 html 文件產生佈局，我們最好在 ``__init__`` 中 *顯性地* 呼叫 parent class 的 ``__init__``，但這並非必要的動作。
+
+.. note::
+    ``TkOutWidget`` 是 ``Frame`` 的子類別，所以任何的 tkouter 元件都能夠被當成一個獨立且符合 tkinter 規範的一般元件，這對於日後重複使用該元件有莫大的好處。
+
+最後，我們一樣產生 ``Tk`` 實體，並生成 ``RandomSelector`` 的實例，簡單地 ``pack`` 後就能呼叫 ``mainloop`` 來啟動視窗程式了：
+
+::
+
+    $ python randsel.py
+
+
+第三步：實作元件功能
+--------------------
+
+接著讓我們加入新的變數和函數來完成新增項目和隨機選擇的功能：
+
+::
+
+    # randsel.py
+    ...
+    import random
+    
+    
+    class RandomSelector(TkOutWidget):
+    
+        # layout
+        layout = 'randsel.html'
+    
+        # model
+        item = StringField(default='Item Name')
+    
+        def __init__(self, master):
+            super().__init__(master)
+            self._items = []
+    
+        def sel(self):
+            if self._items:
+                self.item = random.choice(self._items)
+    
+        def add(self):
+            self._items.append(self.item)
+            self.listbox.insert('end', self.item)
+    ...
+
+.. note::
+    別忘了，為了使用 ``random.choice``，我們要記得匯入 ``random`` 模組。
+
+我們在 ``RandomSelector`` 中加入了一個 class variable ``item``，它是 tkouter 中 ``StringField`` 的實例，我們等等會將它跟 ``Entry`` 元件進行綁定，用以讀寫 ``Entry`` 的值。
+
+接著我們新增了一個 ``self._items`` 清單，他用來記錄使用者增加的各個項目。``sel`` 函數會從 ``self._items`` 中任意挑選一個項目並且寫入 ``Entry`` 元件中。
+``add`` 函數則會透過 ``self.item`` 這個 string field 讀取 ``Entry`` 元件的值，並將之加入 ``Listbox`` 的尾端供使用者檢視。
+
+.. note::
+    我們緊接著會講到，為什麼我們在這裡可以使用 `self.listbox` 拿到對應的 `Listbox` 元件。
+
+第四步：在佈局中使用元件屬性
+-----------------------------
+
+接著我們來改良對應的 html 佈局：
+
+::
+
+    <html>
+        <head>
+            <title> Random Selector </title>
+        </head>
+        <body>
+            <left>
+                <entry width="30" textvariable="{self.item.var}" />
+                <button width="8" text="Select" command="{self.sel}" />
+                <button width="8" text="Add" command="{self.add}" />
+            </left>
+            <top type="labelframe" name="itemframe" text="Items">
+                <listbox name="listbox" />
+            </top>
+        </body>
+    </html>
+
+在 tkouter 的 html 佈局中，我們可以用大括號 ``{}`` 來使用 tkouter 元件的屬性。
+在這裡，我們就用 ``command={self.sel}`` 來將按鈕對應到的 ``command`` 設為 ``RandomSelector`` 中的方法 ``sel``，``self`` 指的是 tkouter 元件：``RandomSelecotr`` 實例本身。
+
+.. note::
+    在 html 佈局中的大括號裡，預設可以用的物件是 ``self``，也就是 tkouter 元件本身，透過 ``.`` 進行階層式的屬性存取，使得我們可以在佈局中使用元件的各種成員。
+
+我們也為 ``<top>`` 標籤和 ``<listbox>`` 標籤增加了 ``name`` 這個屬性，這讓我們可以在 ``RandomSelector`` 中可以使用 ``self.itemframe`` 和 ``self.listbox`` 來存取這兩個元件。
+這也是為什麼我們能使用 ``self.listbox.insert('end', self.item)`` 的原因了。
+
+.. note::
+    對於沒有給定 ``name`` 屬性的元件標籤，tkouter 也會自己幫該元件取一個名字，並且用這個名字產生一個對應的實例變數，而該變數參考到這個標籤元件。
+
+最後，為了將 ``Entry`` 元件的值與 string field ``self.item`` 進行綁定，我們使用了 ``textvariable`` 屬性來指定相應的變數。
+在 tkouter 提供的 field 中，都有一個屬性 ``var``，對應到 tkinter 提供的四種型態變數之一。
+總而言之，若我們想要將某元件與指定的 field 進行綁定，我們應在大括號中指定 field 的 ``var`` 屬性。
+
+完成後我們可以來測試一下基礎的功能，比如說利用 add 按鈕加入若干個項目，並且使用 select 按鈕從中選取一個：
+
+![img: version-2](../demo/randsel/version-2.png)
+
+第五步：調整佈局
+----------------
+
+這個步驟中我們將使用特殊的 `pack` 屬性來調整佈局：
+
+::
+
+    ...
+            <top type="labelframe" name="itemframe" text="Items" pack-fill="both" pack-expand="1" >
+                <listbox name="listbox" pack-fill="both" pack-expand="1" />
+            </top>
+        </body>
+    ...
+
+在 tkouter 的 html 佈局中，我們可以利用帶有前綴 ``pack-`` 的特殊屬性來調整佈局的樣式，
+在這裡我們使得 ``LabelFrame`` 元件和 ``Listbox`` 元件在 ``pack`` 的時候，使用指定的選項： ``fill="both"`` 和 ``expand="1"``。
+
+.. note::
+    使用帶有前綴的特殊標籤屬性，是為了區隔 **元件屬性設定** 和 **佈局元件的行爲**。
+
+調整完的樣子如下：
+
+![img: version-3](../demo/randsel/version-3.png)
+
+第六步：加入菜單
+----------------
+
+在 tkouter 中加入菜單(menu) 是很容易的事情：
+
+::
+
+    # randsel.py
+    ...
+        # model
+        item = StringField(default='Item Name')
+        hide = BoolField(default=False)
+    
+        ...
+    
+        def show(self):
+            if self.hide:
+                self.itemframe.pack_forget()
+            else:
+                self.itemframe.pack(fill="both", expand="1")
+    
+        def quit(self):
+            self.master.destroy()
+    ...
+
+
+我們加入了 ``hide`` 這個布林的欄位，還有另外兩個方法： ``show`` 和 ``quit``。
+
+``show``
+  會根據 ``hide`` 欄位的值決定是否隱藏 ``Listbox`` 元件。
+``quit``
+  是用來結束 tkinter 應用的。
+
+接著讓我們修改視圖：
+
+::
+
+    ...
+        <head>
+            <title> Random Selector </title>
+            <menu>
+                <menu label="Command" underline="0">
+                    <command command="{self.sel}"> Select </command>
+                    <command command="{self.add}"> Add </command>
+                    <separator />
+                    <command command="{self.quit}"> Quit </command>
+                </menu>
+                <menu label="View" underline="0">
+                    <checkbutton label="Hide items" onvalue="1" offvalue="0"
+                     variable="{self.hide.var}" command="{self.show}" />
+                </menu>
+            </menu>
+        </head>
+    ...
+
+
+我們使用 ``<menu>`` 標籤來加入菜單，多層的 ``<menu>`` 標籤可以自動產生多級的菜單。
+該標籤底下可以放置菜單元件標籤，在這裡 ``<command>`` 標籤我們首次採用對稱式的標籤寫法來指定菜單元件的 ``label`` 內容。
+
+這裡我們也為了要將 ``CheckButton`` 元件與 ``hide`` 欄位綁定，使用了 ``variable="{self.hide.var}"`` 的寫法。
+
+菜單如圖示：
+
+![img: version-4](../demo/randsel/version-4.png)
+
+第七步：使用 css 對元件進行設定
+-------------------------------
+
+tkouter 提供了若干簡便的方式，用以一次設定多個元件。
+
+第一種方式我們可以使用 css 文件：``randsel.css`` 來指定元件的選項：
+
+::
+
+    .btn {
+        width: 8;
+    }
+
+
+指定的方式就如同正常的 css selector 一樣，被選中的標籤會套用指定的樣式。
+這不單單試用於元件標籤的屬性選項，我們也可以針對他種標籤做設定(只要該種標籤有設定的選項)，同樣地，特殊的選項如 ``pack-fill`` 等也同樣支援。
+
+下面也是等價可行的設定方式：
+
+::
+
+    body > left > button {
+        width: 8;
+    }
+
+
+當然我們要記得在 ``<head>`` 標籤下面加入 ``<link>`` 標籤來指出 css 文件，也別忘了非成對標籤必須要使用封閉標籤(單標籤尾端加上一個 ``/``)：
+
+::
+
+    ...
+        <head>
+            <title> Random Selector </title>
+            <link rel="stylesheet" type="text/css" href="randsel.css" />
+            <menu>
+    ...
+                <entry width="30" textvariable="{self.item.var}" />
+                <button class="btn" text="Select" command="{self.sel}" />
+                <button class="btn" text="Add" command="{self.add}" />
+            </left>
+            <top type="labelframe" name="itemframe" text="Items" pack-fill="both" pack-expand="1">
+                <listbox name="listbox" pack-fill="both" pack-expand="1" />
+            </top>
+        </body>
+    ...
+
+
+在這裡我們拿掉了 ``<button>`` 標籤的長度設定，改為他們增加一個 ``class`` 屬性，值為 ``btn``。
+藉由 css 的設定，我們最後也能得到長度為 8 的按鈕。
+
+.. note::
+    要提醒的是，css 的設定會被 html 中各標籤中直接指明的選項值給覆蓋！
+
+另一種方式是佈局後，再利用元件的 ``config``、``pack`` 等方法來改變設定或佈局，``TkOutWidget`` 有一個方法 ``select`` 可以幫助我們利用 css selector 來找出符合的元件：
+
+::
+
+    class RandomSelector(TkOutWidget):
+    
+        # layout
+        layout = 'randsel.html'
+    
+        # model
+        item = StringField(default='Item Name')
+    
+        def __init__(self, master):
+            super().__init__(master)
+            for w in self.select('.btn'):
+                w.config(width=8)
+            self._items = []
+    ...
+
+
+有了這些機制之後，我們可以很方便地一次性對若干個元件進行設定。
+
+.. note::
+    tkouter html 佈局中的所有設定都不具備 html 的屬性繼承特性，這受限於不同 tkinter 元件的選項不見得一致。
+
+第八步：tkouter 全域設定
+------------------------
+
+我們可以從 tkouter 中匯入 ``settings`` 模組，並且更改其下的全域設定，包含可使用的元件類別等，例如：
+
+::
+
+    # randsel.py
+    ...
+    from tkouter import settings
+
+    settings.WIDGETS.update({'my_widget': MY_WIDGET})
+    ...
+
+
+如此可新增一個全域可用元件 ``MY_WIDGET``，同時給予一個名稱 ``my_widget`` 讓我們可以在 html 佈局中當作標籤名來使用。
+
+下一步？
+---------
+
+待續...
