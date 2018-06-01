@@ -6,7 +6,7 @@
 ![Coveralls github](https://img.shields.io/coveralls/github/dokelung/tkouter.svg)
 
 * [README 中文版](讀我.md)
-* [PyConTw 2018 Slides 中文版](http://dokelung.me/pst_tkouter/)
+* [PyConTw 2018 Slides 中文版](http://dokelung.github.io/tkouter)
 * [Documents 中文版](https://tkouter.readthedocs.io/zh_TW/latest/)
 
 ## Taste it
