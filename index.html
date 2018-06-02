@@ -27,8 +27,11 @@
 				<section>
 					往 MVC GUI 設計邁進 <br>
 					<a href="https://github.com/dokelung/tkouter">tkouter</a> <br>
-					支援 html-based layout 的 tkinter 擴充函式庫 <br> <br>
+					支援 html(xml)-based layout 的 tkinter 擴充函式庫 <br> <br>
 					<a href="https://dokelung.me">dokelung</a>
+				</section>
+				<section>
+					http://dokelung.github.io/tkouter
 				</section>
 				<section>
 					<section>
@@ -41,8 +44,10 @@
 							3. Blogger @
 								* [dokelung.me](https://dokelung.me)
 								* [dokelung's blog](http://dokelung-blog.logdown.com/pages)
+							4. My [Github](https://github.com/dokelung)
 						</textarea>
 					</section>
+					<!--
 					<section data-markdown>
 						<textarea data-template>
 							Github Repository
@@ -54,7 +59,9 @@
 							6. [minickt](https://github.com/dokelung/minickt)
 						</textarea>
 					</section>
+					-->
 				</section>
+				<!--
 				<section data-markdown>
 					<textarea data-template>
 						Outline
@@ -67,26 +74,80 @@
 						5. Summary
 					</textarea>
 				</section>
+				-->
 				<section>
 					<section>About tkouter</section>
 					<section>一個偶然的念頭...</section>
-					<section>Why tkinter?</section>
-					<section>tkinter -> tkouter</section>
 					<section data-markdown>
 						<textarea data-template>
-							現有的 GUI 設計方法：
-							1. 傳統的實作方法
-							2. 利用 language 本身的模組化能力將 layout 邏輯切割，並提供簡單的溝通介面
-								* [MVC design pattern](https://wiki.wxpython.org/ModelViewController)
-								* [toymvc](https://gist.github.com/ajfigueroa/c2af555630d1db3efb5178ece728b017)
-							3. 使用 GUI 來設計 layout
-								* [wxGlade](http://wxglade.sourceforge.net/)
-							4. 使用 declarative language 來實作 layout
-								* [tkpf](https://github.com/marczellm/tkpf)
-								* [Qt QML](https://doc.qt.io/qt-5/qtqml-index.html)
+							![mvc.png](https://koenig-media.raywenderlich.com/uploads/2016/04/diagram-mvc.png)
+						</textarea>
+					</section>
+					<section>Why tkinter?</section>
+					<section>tkinter(tk 介面) -> tkouter(tk 之外)</section>
+					<section data-markdown>
+						<textarea data-template>
+							tkouter 相關連結
+							1. [Github Repository](https://github.com/dokelung/tkouter)
+							2. [Documents](https://tkouter.readthedocs.io/zh_TW/latest/)
+							3. [Slides](http://dokelung.github.io/tkouter)
 						</textarea>
 					</section>
 				</section>
+				<section>
+					<section>Current Design Methodology</section>
+					<section data-markdown>
+						<textarea data-template>
+							傳統的實作方法
+							```python
+							self.seladd_frame = Frame(self)
+							self.itemframe = LabelFrame(self, text='Items')
+							self.seladd_frame.pack()
+							self.itemframe.pack(fill='both', expand=1)
+							self.entry = Entry(self.seladd_frame, width=30, textvariable=self.item)
+							self.entry.pack(side='left')
+							self.sel_button = Button(self.seladd_frame, text="Select", command=self.sel, width=8)
+							self.add_button = Button(self.seladd_frame, text="Add", command=self.add, width=8)
+							self.sel_button.pack(side='left')
+							self.add_button.pack(side='left')
+							self.listbox = Listbox(self.itemframe)
+							self.listbox.pack(fill='both', expand=1)
+							```
+						</textarea>
+					</section>
+					<section data-markdown>
+						<textarea data-template>
+							利用 language 本身的模組化能力將 layout 邏輯切割
+							* [MVC design pattern](https://wiki.wxpython.org/ModelViewController)
+							* [toymvc](https://gist.github.com/ajfigueroa/c2af555630d1db3efb5178ece728b017)
+						</textarea>
+					</section>
+					<section data-markdown>
+						<textarea data-template>
+							使用 GUI 來設計 layout: [wxGlade](http://wxglade.sourceforge.net/)
+							![wxGlade.png](https://upload.wikimedia.org/wikipedia/commons/9/98/WxGlade-0.3.5.1.png)
+						</textarea>
+					</section>
+					<section data-markdown>
+						<textarea data-template>
+							使用 declarative language: [tkpf](https://github.com/marczellm/tkpf)、[Qt QML](https://doc.qt.io/qt-5/qtqml-index.html)
+							```yaml
+							- Frame:
+							    tab-text: Grid layout
+							    children:
+							    - Label:
+							        grid-row: 0
+							        grid-column: 0
+							        text: Cell
+							    - Label:
+							        grid-row: 0
+							        grid-column: 1
+							        text: Cellll
+							```
+						</textarea>
+					</section>
+				</section>
+				<!--
 				<section>
 					<section> An Example: Random Selector </section>
 					<section data-markdown>
@@ -215,8 +276,71 @@
 						</textarea>
 					</section>
 				</section>
+				-->
 				<section>
-					<section> Html-based Layout</section>
+					<section>Taste it</section>
+					<!--
+					<section data-markdown>
+						<textarea data-template>
+							Requirements
+							1. Python3.5 或更新的版本
+							2. Jinja2
+							3. lxml
+							4. tinycss
+							5. cssslect
+						</textarea>
+					</section>
+					-->
+					<section data-markdown>
+						<textarea data-template>
+							Installation
+							```sh
+							$ pip install tkouter
+							$ git clone https://github.com/dokelung/tkouter.git
+							```
+						</textarea>
+					</section>
+					<section data-markdown>
+						<textarea data-template>
+							[Hello World](https://tkouter.readthedocs.io/zh_TW/latest/#taste-it)
+							```html
+							<html>
+							    <head>
+							        <title> hello world </title>
+							    </head>
+							    <body>
+							        <button width="20" command="{self.hello}">
+							            Click
+							        </button>
+							     </body>
+							</html>
+							```
+							```python
+							from tkinter import Tk, messagebox
+							from tkouter import *
+
+							class HelloWorld(TkOutWidget):
+								layout = 'hw.html'
+							
+							    def hello(self):
+							        messagebox.showinfo('welcome to tkouter',
+							                            'hello world')
+							```
+						</textarea>
+					</section>
+					<section data-markdown>
+						<textarea data-template>
+							Try more demo
+							```sh
+							$ git clone https://github.com/dokelung/tkouter.git
+							$ cd tkouter/demo/DEMO_NAME
+							$ python3 DEMO_NAME.py
+							```
+						</textarea>
+					</section>
+				</section>
+				<section>
+					<section> Html(Xml)-based Layout</section>
 					<section data-markdown>
 						<textarea data-template>
 							自動處理各種繁瑣的設定：生成、取名、擺置
@@ -229,18 +353,16 @@
 
 							# display
 							self.sel_button.pack(side='left')
-
-							# 其實這個 button 是一次性的元件
 							```
-							tkouter：
-							```
+							```html
+							<!--tkouter-->
 							<button class="btn" command="{self.sel}"> Select </button>
 							```
 						</textarea>
 					</section>
 					<section data-markdown>
 						<textarea data-template>
-							清晰的結構和階層化：從屬關係
+							清晰的結構和階層化：
 							```python
 							self.seladd_frame = Frame(self)
 							self.itemframe = LabelFrame(self, text='Items')
@@ -248,37 +370,14 @@
 							self.sel_button = Button(self.seladd_frame, text="Select")
 							self.add_button = Button(self.seladd_frame, text="Add")
 							self.listbox = Listbox(self.itemframe)
-							```
-							tkouter:
-							```html
-							<left>
-								<entry width="30" textvariable="{self.item.var}" />
-								<button class="btn" text="Select" />
-								<button class="btn" text="Add" />
-							</left>
-							<top type="labelframe" name="itemframe" text="Items">
-								<listbox name="listbox" />
-							</top>
-							```
-						</textarea>
-					</section>
-					<section data-markdown>
-						<textarea data-template>
-							清晰的結構和階層化：更簡單地完成複雜的 layout
-							```python
-							# 複雜的 layout 需要大量的 frame 和 pack 控制
-							self.seladd_frame = Frame(self)
-							self.itemframe = LabelFrame(self, text='Items')
 
 							self.entry.pack(side='left')
 							self.sel_button.pack(side='left')
 							self.add_button.pack(side='left')
 							self.listbox.pack(fill='both')
-
-							# 順著 pack 去想像結構還是順著結構去 pack？
 							```
-							tkouter:
 							```html
+							<!--tkouter-->
 							<left>
 								<entry width="30" textvariable="{self.item.var}" />
 								<button class="btn" text="Select" />
@@ -290,9 +389,14 @@
 							```
 						</textarea>
 					</section>
+					<section>
+						順著 pack 去想像結構 <br><br>
+						還是 <br><br>
+						順著結構去 pack？
+					</section>
 					<section data-markdown>
 						<textarea data-template>
-							清晰的結構和階層化：menu 設定
+							menu 設定
 							```html
 							<head>
 							    <menu>
@@ -332,97 +436,17 @@
 					</section>
 					<section data-markdown>
 						<textarea data-template>
-							layout html 支援 jinja2 的語法
-							1. 支援 render 功能
-							2. 支援模板語法
-							3. 支援繼承
-						</textarea>
-					</section>
-					<section data-markdown>
-						<textarea data-template>
-							layout html 支援動態綁定
-							```html
-							<button class="btn" command="{self.sel}"> Select </button>
-							```
-						</textarea>
-					</section>
-					<section data-markdown>
-						<textarea data-template>
-							當畫面更複雜，layout 更多層次時，html-based layout 的威力越大
-						</textarea>
-					</section>
-					<section data-markdown>
-						<textarea data-template>
 							其他特性
-							1. 更方便的 root attributes 設定
-							2. 以類似 html table 的語法，支援 grid 佈局方法	
-							3. 使用 tkouter 設計出來的是一個可重複使用的元件，不只是一個 GUI 應用
-						</textarea>
-					</section>
-				</section>
-				<section>
-					<section>Taste it</section>
-					<section data-markdown>
-						<textarea data-template>
-							Requirements
-							1. Python3.5 或更新的版本
-							2. Jinja2
-							3. lxml
-							4. tinycss
-							5. cssslect
-						</textarea>
-					</section>
-					<section data-markdown>
-						<textarea data-template>
-							Installation
-							```sh
-							$ pip install tkouter
-
-							$ git clone https://github.com/dokelung/tkouter.git
-							```
-						</textarea>
-					</section>
-					<section data-markdown>
-						<textarea data-template>
-							Hello World
-							```python
-							from tkinter import Tk, messagebox
-							from tkouter import *
-
-							class HelloWorld(TkOutWidget):
-								layout = """
-							        <html>
-							            <head>
-							                <title> hello world </title>
-							            </head>
-							            <body>
-							                <button width="20" command="{self.hello}">
-							                    Click
-							                </button>
-							             </body>
-							         </html>"""
-							
-														    def hello(self):
-							        messagebox.showinfo('welcome to tkouter',
-							                            'hello world')
-							
-							
-							if __name__ == '__main__':
-							    root = Tk()
-							    hl = HelloWorld(root)
-							    hl.pack()
-							    root.mainloop()
-							```
-						</textarea>
-					</section>
-					<section data-markdown>
-						<textarea data-template>
-							Try more demo
-							```sh
-							$ git clone https://github.com/dokelung/tkouter.git
-							$ cd tkouter/demo/DEMO_NAME
-							$ python3 DEMO_NAME.py
-							```
+							1. html(xml) layout 支援 jinja2 的語法
+							2. 更方便的 root attributes 設定
+							3. 以類似 html table 的語法，支援 grid 佈局方法	
+							4. 使用 tkouter 設計出來的是一個可重複使用的元件，不只是一個 GUI 應用
+							<aside class="notes">
+								支援 render 功能
+								支援模板語法
+								支援繼承
+								當畫面更複雜，layout 更多層次時，html-based layout 的威力越大
+							</aside>
 						</textarea>
 					</section>
 				</section>
@@ -537,27 +561,31 @@
 							* Css selector: [`lxml.cssselect.CSSSelector`](http://lxml.de/cssselect.html)
 							* Template: [`jinja2`](http://jinja.pocoo.org/docs/2.10/)
 						</textarea>
-					</section>
-					<section data-markdown>
-						<textarea data-template>
+						<aside class="notes">
 							Troubles
 							1. 讀取、剖析各式檔案
 							2. 防呆
 							3. 解決例外
-						</textarea>
+						</aside>
 					</section>
 				</section>
 				<section>
 					<section>Summary</section>
 					<section data-markdown>
 						<textarea data-template>
-							* MVC：抽離不同的邏輯
-								* M: tkouter field (need more...)
-								* V: html-based layout
-								* C: tkouter widget
-							* 從熟悉的事物下手
+							tkouter 使得 GUI design 往 MVC 靠近了
+							* M: tkouter field (need more...)
+							* V: html-based layout
+							* C: tkouter widget
 						</textarea>
 					</section>
+					<section>
+						從 "熟悉的事物" 下手，更容易上手！
+					</section>
+					<section>
+						"概念" 和 "拋出概念 更重要！
+					</section>
+					<!--
 					<section data-markdown>
 						<textarea data-template>
 							寫一個套件要考慮的事情真的很多
@@ -570,8 +598,9 @@
 							7. 取名字 = =
 						</textarea>
 					</section>
+					-->
 					<section>
-						關於自幹 <br><br>
+						最後... 關於自幹...
 						<aside class="notes">
 							自幹是一件很痛苦又很爽的事情
 							讓你有滿滿的動力去發現全世界
