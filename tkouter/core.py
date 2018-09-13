@@ -2,14 +2,13 @@
 """
 
 
-__all__ =  [
+__all__ = [
     'register',
     'TkOutWidget',
 ]
 
 
 from io import StringIO
-from html.parser import HTMLParser
 from tkinter import Frame, Menu
 from tkinter import ttk
 
@@ -24,8 +23,8 @@ from .errors import *
 
 def register(name):
     """ function to add additional widget to BODY_WIDGETS
-    usage: 
-        register('my_widget_name')(MyWidgetClass) 
+    usage:
+        register('my_widget_name')(MyWidgetClass)
     """
     def _register(widget_cls):
         settings.WIDGETS[name] = widget_cls
@@ -42,7 +41,7 @@ class TkGridMgr:
         rsegments = self._segments.setdefault(row, [])
         if not rsegments:
             return 0
-        lo = rsegments[0][0]
+
         hi = rsegments[-1][-1]
         for col in range(0, hi + 2):
             if self._has_space(row, col, rowspan, colspan):
@@ -115,12 +114,14 @@ class TkOutElement(etree.ElementBase):
 
     # top checker
     def _check_valid(self):
-        if not (self.is_html or self.is_scope or self.can_under_head or self.can_under_body):
+        if not (self.is_html or self.is_scope or self.can_under_head or
+                self.can_under_body):
             msg = 'unrecognized tag <{}>'
             raise TagUnRecognizedError(msg.format(self.tag))
 
     def _check_scope(self):
-        if not (self.is_html or self.is_scope or self.is_under_head or self.is_under_body):
+        if not (self.is_html or self.is_scope or self.is_under_head or
+                self.is_under_body):
             msg = 'tag <{}> should be under tag <head> or <body>'
             raise TagInWrongScope(msg.format(self.tag))
         elif self.is_under_head and not self.can_under_head:
@@ -151,8 +152,8 @@ class TkOutElement(etree.ElementBase):
         execution.
 
         Some options are special or complicated, we should pre-set their values
-        and assign to some variables then specify the variable in symbol "{" and
-        "}" as option value.
+        and assign to some variables then specify the variable in symbol
+        "{" and "}" as option value.
         """
         modified_options = {}
         for name, value in options.items():
@@ -170,7 +171,7 @@ class TkOutElement(etree.ElementBase):
                         elif attr in data:
                             data = data[attr]
                     modified_options[name] = data
-                except:
+                except TypeError:
                     msg = 'data "{}" does not exist'
                     raise DataNotExistError(msg.format(value))
             else:
@@ -182,7 +183,7 @@ class TkOutElement(etree.ElementBase):
             if attr in ['name', 'type', 'class', 'id']:
                 continue
             elif '-' in attr:
-                method, _, attr  = attr.partition('-')
+                method, _, attr = attr.partition('-')
                 options = self._widget_method_options.setdefault(method, {})
                 options[attr] = value
             else:
@@ -225,7 +226,7 @@ class TkOutElement(etree.ElementBase):
     # tag category
     @property
     def is_html(self):
-        return self.tag == 'html' or self.tag =='xml'
+        return self.tag == 'html' or self.tag == 'xml'
 
     @property
     def is_head(self):
@@ -285,7 +286,8 @@ class TkOutElement(etree.ElementBase):
 
     @property
     def is_notebook(self):
-        return self.has_widget_cls and issubclass(self.widget_cls, ttk.Notebook)
+        return (self.has_widget_cls and
+                issubclass(self.widget_cls, ttk.Notebook))
 
     # scope checker
     @property
@@ -318,15 +320,18 @@ class TkOutElement(etree.ElementBase):
 
     @property
     def can_under_head(self):
-        return self.is_root_attr or self.is_link or self.is_menu or self.can_under_menu
+        return (self.is_root_attr or self.is_link or self.is_menu or
+                self.can_under_menu)
 
     @property
     def can_under_menu(self):
-        return self.tag in ['separator', 'command', 'radiobutton', 'checkbutton'] or self.is_sub_menu
+        return (self.tag in ['separator', 'command', 'radiobutton',
+                             'checkbutton'] or self.is_sub_menu)
 
     @property
     def can_under_body(self):
-        return (self.tag in self.widgets and not self.is_menu) or self.is_side or self.is_grid or self.is_grid_element
+        return ((self.tag in self.widgets and not self.is_menu) or
+                self.is_side or self.is_grid or self.is_grid_element)
 
     @property
     def can_in_grid(self):
@@ -343,7 +348,8 @@ class TkOutElement(etree.ElementBase):
     # widget checker
     @property
     def has_no_widget_type(self):
-        return self.is_html or self.is_scope or self.is_root_attr or self.is_grid_element
+        return (self.is_html or self.is_scope or self.is_root_attr or
+                self.is_grid_element)
 
     @property
     def has_widget_type(self):
@@ -389,7 +395,8 @@ class TkOutElement(etree.ElementBase):
                     self.widget_type_counter[self.widget_type] += 1
                 else:
                     self.widget_type_counter[self.widget_type] = 0
-                self._name = self.widget_type + '_' + str(self.widget_type_counter[self.widget_type])
+                self._name = (self.widget_type + '_' +
+                              str(self.widget_type_counter[self.widget_type]))
         return self._name
 
     @property
@@ -429,7 +436,8 @@ class TkOutElement(etree.ElementBase):
         if self._widget is None:
             assert(self.parent_widget)
             if self.is_under_body and not self.is_grid_element:
-                self._widget = self.widget_cls(self.parent_widget, **self._options)
+                self._widget = self.widget_cls(self.parent_widget,
+                                               **self._options)
                 setattr(self.tkoutw, self.widget_name, self._widget)
             elif self.is_menu:
                 self._widget = self.widget_cls(self.parent_widget)
@@ -438,13 +446,16 @@ class TkOutElement(etree.ElementBase):
 
     # core function
     def display(self):
-        if self.is_html or self.is_scope or self.is_link or self.is_grid_element:
+        if (self.is_html or self.is_scope or self.is_link or
+                self.is_grid_element):
             pass
         elif self.is_under_head:
             if self.is_sub_menu:
-                self.parent_widget.add_cascade(menu=self.widget, **self._options)
+                self.parent_widget.add_cascade(menu=self.widget,
+                                               **self._options)
             elif self.is_under_menu:
-                self.parent_widget.add(itemType=self.widget_type, **self._options)
+                self.parent_widget.add(itemType=self.widget_type,
+                                       **self._options)
             elif self.is_top_menu:
                 self.parent_widget['menu'] = self.widget
             elif self.is_root_attr:
@@ -456,14 +467,16 @@ class TkOutElement(etree.ElementBase):
             else:
                 self.widget.pack(**self.pack_options)
             if self.getparent().is_notebook:
-                self.parent_widget.add(child=self.widget, text=self.widget_name)
+                self.parent_widget.add(child=self.widget,
+                                       text=self.widget_name)
 
 
 class TkOutWidget(Frame):
     """ Design a user-defined widget with html-based layout
 
     User could define a html-based layout widget just by inheriting this class.
-    Subclass may override some class attributes to make its own widget or layout.
+    Subclass may override some class attributes
+    to make its own widget or layout.
 
     Public attributes:
     - widgets: available widgets (dictionary)
@@ -507,7 +520,6 @@ class TkOutWidget(Frame):
         self._proxy_cache = list(self._tree.getroot().iter())
 
         # css
-        css = None
         for e in self._tree.getroot().iter():
             if e.is_css and e.get('href'):
                 self._css = env.get_template(e.get('href')).render()
@@ -526,7 +538,8 @@ class TkOutWidget(Frame):
                 e.display()
             except TagError as err:
                 print('Error when parsing tag: ')
-                print(etree.tostring(e, pretty_print=True, encoding=str, method='html'))
+                print(etree.tostring(e, pretty_print=True, encoding=str,
+                                     method='html'))
                 raise err
 
     def _select(self, selector_str):
@@ -536,4 +549,5 @@ class TkOutWidget(Frame):
 
     def select(self, selector_str):
         """ use css selector string to query corresponding widgets """
-        return (e.widget for e in self._select(selector_str) if e.widget is not None)
+        return (e.widget for e in self._select(selector_str)
+                if e.widget is not None)
