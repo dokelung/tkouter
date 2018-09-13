@@ -1,11 +1,7 @@
-from io import StringIO
 from tkinter import *
-from tkinter import ttk
 import unittest
 
-from lxml import etree
-from lxml.cssselect import CSSSelector
-from tkouter.core import TkGridMgr, TkOutWidget, TkOutElement, register
+from tkouter.core import TkGridMgr, TkOutWidget, register
 from tkouter.errors import *
 from tkouter.fields import *
 from tkouter import settings
@@ -28,7 +24,9 @@ layout_html = """
             <body>
                 <notebook name="nb">
                     <left type="labelframe" pack-fill="both">
-                        <button command="{self.test}"> {self.data_dict.button_text} </button>
+                        <button command="{self.test}">
+                            {self.data_dict.button_text}
+                        </button>
                         <entry id="0" textvariable="{self.strfield.var}" />
                         <entry id="1" textvariable="{self.boolfield.var}" />
                         <entry id="2" textvariable="{self.intfield.var}" />
@@ -37,11 +35,17 @@ layout_html = """
                 {% if test_grid %}
                 <grid>
                     <gr id="gr0">
-                        <gd id="gd0"><button id="bt0" text="grid button 0" /></gd>
-                        <gd id="gd1" rowspan="2" columnspan="2"><button id="bt1" text="grid button 1" /></gd>
+                        <gd id="gd0">
+                            <button id="bt0" text="grid button 0" />
+                        </gd>
+                        <gd id="gd1" rowspan="2" columnspan="2">
+                            <button id="bt1" text="grid button 1" />
+                        </gd>
                     </gr>
                     <gr id="gr1">
-                        <gd id="gd2"><button id="bt2" text="grid button 2" /></gd>
+                        <gd id="gd2">
+                            <button id="bt2" text="grid button 2" />
+                        </gd>
                     </gr>
                 </grid>
                 {% endif %}
@@ -56,6 +60,7 @@ layout_css = """
         }
     """
 
+
 @register('testwidget')
 class TestWidget(TkOutWidget):
     strfield = StringField(default='str', max_length=5)
@@ -68,6 +73,7 @@ class TestWidget(TkOutWidget):
 
     def test(self):
         pass
+
 
 class TestWidgetWithCss(TkOutWidget):
     strfield = StringField(default='str', max_length=5)
@@ -83,35 +89,48 @@ class TestWidgetWithCss(TkOutWidget):
         for b in self.select('button'):
             b.config(text='change')
 
+
 class TestWidgetWithoutLayout(TkOutWidget):
     pass
+
 
 class TestTagUnRecognizedError(TkOutWidget):
     layout = """<html><hello> invalid </hello></html>"""
 
+
 class TestDataNotExistError(TkOutWidget):
-    layout = """<html><head></head><body><button command="{self.nofunc}" /></body></html>"""
+    layout = """<html><head></head><body>
+                <button command="{self.nofunc}" /></body></html>"""
+
 
 class TestTagInWrongScopeOutSide(TkOutWidget):
     layout = """<html><radiobutton /><head></head><body></body></html>"""
 
+
 class TestTagInWrongScopeHead(TkOutWidget):
     layout = """<html><head><button /></head><body></body></html>"""
 
+
 class TestTagInWrongScopeMenu(TkOutWidget):
-    layout = """<html><head><menu><title></title></menu></head><body></body></html>"""
+    layout = """<html><head><menu><title></title></menu></head>
+                <body></body></html>"""
+
 
 class TestTagInWrongScopeBody(TkOutWidget):
     layout = """<html><head></head><body><command /></body></html>"""
 
+
 class TestTagInWrongScopeGrid(TkOutWidget):
     layout = """<html><body><grid><gd></gd></grid></body></html>"""
+
 
 class TestTagInWrongScopeGr(TkOutWidget):
     layout = """<html><body><grid><gr><button /></gr></grid></body></html>"""
 
+
 class TestTagInWrongScopeGd(TkOutWidget):
-    layout = """<html><body><grid><gr><gd><gr></gr></gd></gr></grid></body></html>"""
+    layout = """<html><body><grid><gr><gd><gr>
+                </gr></gd></gr></grid></body></html>"""
 
 
 class TestTkOutWidget(unittest.TestCase):
@@ -135,7 +154,6 @@ class TestTkOutWidget(unittest.TestCase):
         left = self.select_one_element('body left')
         notebook = self.select_one_element('body > notebook')
         button = self.select_one_element('left > button')
-        command = self.select_one_element('menu > command')
         radiobutton = self.select_one_element('menu > radiobutton')
         entry_0 = self.select_one_element('left > entry#0')
         grid = self.select_one_element('body > grid')
@@ -154,7 +172,8 @@ class TestTkOutWidget(unittest.TestCase):
         self.assertTrue(head.is_scope and not title.is_scope)
         self.assertTrue(left.is_side and not body.is_side)
         self.assertTrue(grid.is_grid and gr_0.is_gr and gd_0.is_gd)
-        self.assertTrue(not grid.is_grid_element and gr_0.is_grid_element and gd_0.is_grid_element)
+        self.assertTrue(not grid.is_grid_element and gr_0.is_grid_element and
+                        gd_0.is_grid_element)
         self.assertTrue(top_menu.is_menu and sub_menu.is_menu)
         self.assertTrue(top_menu.is_top_menu)
         self.assertTrue(sub_menu.is_sub_menu)
@@ -167,20 +186,24 @@ class TestTkOutWidget(unittest.TestCase):
         self.assertTrue(gd_0.is_in_gr and not gr_0.is_in_gr)
         self.assertTrue(button_g0.is_in_gd and not gd_0.is_in_gd)
         self.assertTrue(css.can_under_head and not left.can_under_head)
-        self.assertTrue(radiobutton.can_under_menu and not button.can_under_menu)
+        self.assertTrue(radiobutton.can_under_menu and
+                        not button.can_under_menu)
         self.assertTrue(notebook.can_under_body and not title.can_under_body)
         self.assertFalse(top_menu.can_under_body or sub_menu.can_under_body)
         self.assertTrue(gr_0.can_in_grid and not grid.can_in_grid)
         self.assertTrue(gd_0.can_in_gr and not gr_0.can_in_gr)
-        self.assertTrue(button_g0.can_in_gd and not gd_0.can_in_gd and not top_menu.can_in_gd)
+        self.assertTrue(button_g0.can_in_gd and not gd_0.can_in_gd and
+                        not top_menu.can_in_gd)
         # widget checker
         self.assertTrue(title.has_no_widget_type and html.has_no_widget_type)
         self.assertTrue(button.has_widget_type and radiobutton.has_widget_type)
         self.assertTrue(button.has_widget_name and not title.has_widget_name)
         self.assertTrue(left.has_widget_cls and not title.has_widget_cls)
         self.assertTrue(button.has_options and not notebook.has_options)
-        self.assertTrue(button.has_widget and top_menu.has_widget and not css.has_widget)
-        self.assertTrue(grid.has_gridmgr and not gr_0.has_gridmgr and not gd_0.has_gridmgr)
+        self.assertTrue(button.has_widget and top_menu.has_widget and
+                        not css.has_widget)
+        self.assertTrue(grid.has_gridmgr and not gr_0.has_gridmgr and
+                        not gd_0.has_gridmgr)
         # widget attr
         self.assertIsNone(title.widget_type)
         self.assertEqual(left.widget_type, 'labelframe')
@@ -198,10 +221,13 @@ class TestTkOutWidget(unittest.TestCase):
         self.assertEqual(grid.gridmgr, gd_0.gridmgr)
         self.assertEqual(button._options['command'], self.tkoutw.test)
         self.assertEqual(button._options['text'], 'test button')
-        self.assertEqual(entry_0._options['textvariable'], self.tkoutw.__class__.__dict__['strfield'].var)
+        self.assertEqual(entry_0._options['textvariable'],
+                         self.tkoutw.__class__.__dict__['strfield'].var)
         self.assertEqual(left.pack_options['fill'], 'both')
         self.assertEqual(gd_0.grid_options, {'row': 0, 'column': 0})
-        self.assertEqual(gd_1.grid_options, {'row': 0, 'column': 1, 'rowspan': '2', 'columnspan': '2'})
+        self.assertEqual(gd_1.grid_options, {'row': 0, 'column': 1,
+                                             'rowspan': '2',
+                                             'columnspan': '2'})
         self.assertEqual(gd_2.grid_options, {'row': 1, 'column': 0})
         self.assertIsNone(title.widget)
         self.assertIsInstance(button.widget, Button)
